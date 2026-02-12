@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>College Details - VIDYA</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+      /* Layout Styles matching your original design */
+      .vc-header { background: linear-gradient(90deg, #6e1bd6, #ff2c92); color: #fff; padding: 20px; display:flex; justify-content:space-between; align-items:center; }
+      .vc-main { max-width: 1200px; margin: 20px auto; padding: 0 20px; display: flex; gap: 20px; flex-wrap: wrap; }
+      
+      /* Hero Section */
+      .vc-hero-wrapper { width: 100%; margin-bottom: 20px; }
+      .vc-hero { background: #000; color: #fff; border-radius: 15px; overflow: hidden; position: relative; min-height: 450px; display:flex; align-items:flex-end; }
+      .vc-hero video, .vc-hero img.bg-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.6; }
+      .vc-hero-content { position: relative; z-index: 2; padding: 40px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); width:100%; display:flex; align-items:center; gap:20px; }
+      .vc-logo { width: 90px; height: 90px; background: #fff; border-radius: 12px; padding: 5px; object-fit: contain; }
+      
+      /* Columns */
+      .vc-left { flex: 2; min-width: 600px; }
+      .vc-right { flex: 1; min-width: 300px; }
+
+      /* Cards */
+      .vc-card { background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+      h2, h3 { color: #6e1bd6; margin-top: 0; }
+
+      /* Gallery */
+      .gallery-grid { display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; }
+      .gallery-img { height: 120px; border-radius: 8px; cursor: pointer; transition: transform 0.2s; }
+      .gallery-img:hover { transform: scale(1.05); }
+
+      /* Course Table */
+      .course-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+      .course-table th { text-align: left; background: #f8f9fa; padding: 10px; color: #666; font-size: 0.9rem; }
+      .course-table td { padding: 12px 10px; border-bottom: 1px solid #eee; }
+      
+      /* Reviews */
+      .review-item { border-bottom: 1px solid #eee; padding: 15px 0; }
+      .review-head { display: flex; justify-content: space-between; margin-bottom: 5px; }
+      .rev-stars { color: #ffc107; }
+
+      /* Facilities List */
+      .fac-list { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+      .fac-item { background: #f0f2f5; padding: 5px 10px; border-radius: 4px; font-size: 0.9rem; }
+
+      .btn-fav { background: rgba(255,255,255,0.2); color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; border: 1px solid rgba(255,255,255,0.5); cursor: pointer; }
+      .btn-fav:hover { background: white; color: #6e1bd6; }
+
+      /* Responsive */
+      @media (max-width: 900px) { .vc-main { flex-direction: column; } .vc-left, .vc-right { min-width: 100%; } }
+  </style>
+</head>
+<body>
+
+<header class="vc-header">
+    <div style="font-weight:bold; font-size:1.5rem;">VIDYA</div>
+    <div>
+        <button id="favBtn" class="btn-fav">🤍 Add to Favorites</button>
+        <a href="index.html" style="color:white; text-decoration:none; margin-left:15px;">Home</a>
+    </div>
+</header>
+
+<div id="loading" style="text-align:center; padding:50px; font-size:1.2rem; color:#666;">Loading college details...</div>
+
+<div id="content" class="vc-main" style="display:none;">
+    
+    <div class="vc-hero-wrapper">
+        <div class="vc-hero">
+            <div id="mediaContainer"></div>
+            <div class="vc-hero-content">
+                <img id="cLogo" class="vc-logo" src="assets/default-college.png" alt="Logo">
+                <div>
+                    <h1 id="cName" style="margin:0; font-size:2.5rem; text-shadow:2px 2px 4px rgba(0,0,0,0.8);">College Name</h1>
+                    
+                    <p style="margin:5px 0; font-size:1.2rem; text-shadow:1px 1px 2px rgba(0,0,0,0.8);">
+                        <span id="cLoc">Location</span> 
+                        <span id="cRankWrapper" style="display:none;"> • <span id="cRank"></span></span>
+                    </p>
+                    
+                    <span id="cRating" style="background:#4caf50; padding:2px 8px; border-radius:4px; font-weight:bold;">0 ★</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="vc-left">
+        
+        <div class="vc-card" id="gallerySection" style="display:none;">
+            <h3>Gallery</h3>
+            <div class="gallery-grid" id="galleryGrid"></div>
+        </div>
+
+        <div class="vc-card">
+            <h2>About</h2>
+            <p id="cDesc" style="line-height:1.6; color:#444; white-space: pre-line;">...</p>
+        </div>
+
+        <div class="vc-card">
+            <h2>Courses Offered</h2>
+            <p id="cCourseSummary" style="font-weight:bold; margin-bottom:10px; color:#555;"></p>
+            <div id="coursesContainer">
+                <p>Loading specific course data...</p>
+            </div>
+        </div>
+
+        <div class="vc-card">
+            <h2>Highlights & Admission</h2>
+            <p><strong>Eligibility:</strong> <span id="cElig"></span></p>
+            <p><strong>Admission Process:</strong> <span id="cAdmin"></span></p>
+            <p><strong>Placement Info:</strong> <span id="cPlace"></span></p>
+            <p><strong>Seats:</strong> <span id="cSeats"></span></p>
+        </div>
+
+        <div class="vc-card">
+            <h2>Student Reviews</h2>
+            <div id="reviews-list"></div>
+            
+            <hr style="margin:20px 0; border:0; border-top:1px solid #eee;">
+            
+            <h3>Write a Review</h3>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <select id="revRating" style="padding:10px; border-radius:5px; border:1px solid #ddd;">
+                    <option value="5">★★★★★ (5 Stars)</option>
+                    <option value="4">★★★★☆ (4 Stars)</option>
+                    <option value="3">★★★☆☆ (3 Stars)</option>
+                </select>
+                <textarea id="revText" rows="3" placeholder="Share your experience..." style="padding:10px; border-radius:5px; border:1px solid #ddd;"></textarea>
+                <button onclick="submitReview()" style="padding:10px; background:#6e1bd6; color:white; border:none; border-radius:5px; cursor:pointer;">Submit Review</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="vc-right">
+        <div class="vc-card">
+            <h3>Contact Info</h3>
+            <p><strong>Website:</strong> <a id="cWeb" href="#" target="_blank">Visit Site</a></p>
+            <p><strong>Phone:</strong> <span id="cPhone"></span></p>
+            <p><strong>Email:</strong> <span id="cEmail"></span></p>
+            <p><strong>Social:</strong> <a id="cSocial" href="#" target="_blank">View Profile</a></p>
+        </div>
+
+        <div class="vc-card">
+            <h3>Facilities</h3>
+            <ul class="fac-list" id="cFacil"></ul>
+        </div>
+        
+        <div class="vc-card">
+            <h3>Details</h3>
+            <p><strong>Type:</strong> <span id="cInstType"></span></p>
+            <p><strong>Mode:</strong> <span id="cEduMode"></span></p>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="college_logic.js"></script>
+<footer style="padding:28px;text-align:center;color:#666">2026 VIDYA Project | Developed by Samson Varghese, Ewin Job, Jeremiah AR</footer>
+</body>
+</html>

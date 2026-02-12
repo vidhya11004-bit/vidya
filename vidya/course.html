@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Course Syllabus - VIDYA</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body{font-family: 'Segoe UI', Arial, sans-serif; background:#f0f2f5; margin:0}
+    .header-sub{background:linear-gradient(135deg,#6e1bd6,#ff2c92); color:#fff; padding:25px 15px; text-align:center;}
+    .container{max-width:1100px; margin:auto; padding:15px;}
+    
+    /* Navigation */
+    .sem-nav{display:flex; gap:8px; margin-bottom:20px; overflow-x:auto; padding:5px; justify-content:center;}
+    .sem-link{padding:8px 18px; background:#fff; border-radius:20px; text-decoration:none; color:#6e1bd6; font-weight:600; cursor: pointer; border:1px solid transparent;}
+    .sem-link:hover { border-color: #6e1bd6; }
+    .sem-link.active{background:#6e1bd6; color:#fff;}
+    
+    /* Grid */
+    .subject-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:15px;}
+    
+    /* Card Design */
+    .sub-card{
+        background:#fff; border-radius:10px; padding:20px; 
+        border-left:5px solid #6e1bd6; 
+        box-shadow:0 3px 10px rgba(0,0,0,0.05);
+        transition: transform 0.2s;
+    }
+    .sub-card:hover { transform: translateY(-3px); }
+    
+    .subject-tag {
+        background: #f0efff; color: #6e1bd6; 
+        padding: 4px 8px; border-radius: 4px; 
+        font-size: 0.75rem; font-weight: bold; text-transform: uppercase;
+    }
+    
+    .download-btn {
+        display:block; text-align:center; padding:10px; 
+        background:#6e1bd6; color:white; text-decoration:none; 
+        border-radius:6px; margin-top:15px; font-weight: 600;
+    }
+    .download-btn:hover { background: #5614ab; }
+  </style>
+</head>
+<body>
+
+<div class="header-sub">
+    <h1 id="courseTitle">Loading...</h1>
+    <a href="index.html" style="color:#fff; text-decoration:underline; font-size:0.9rem;">← Back to Dashboard</a>
+</div>
+
+<div class="container">
+    <div class="sem-nav" id="semNav"></div>
+    <div class="subject-grid" id="subjectGrid">
+        <p style="text-align:center; width:100%; padding:20px;">Loading data...</p>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script>
+    // --- A. CONFIGURATION ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyBt5DvViwm5ls_B4CWKYIYhMutJJ9opw_Y",
+        authDomain: "vidyaproject-c4a1d.firebaseapp.com",
+        projectId: "vidyaproject-c4a1d",
+        storageBucket: "vidyaproject-c4a1d.firebasestorage.app",
+        messagingSenderId: "637214484165",
+        appId: "1:637214484165:web:f23e84c08cd6069f6fb2ac"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // --- B. URL HANDLING ---
+    const params = new URLSearchParams(window.location.search);
+    // Get the raw code (e.g., 'bcom')
+    let rawCode = params.get('c') || params.get('course') || 'bca';
+    // Ensure it is ALWAYS lowercase for the database query
+    const dbQueryCode = rawCode.toLowerCase(); 
+    const currentSem = parseInt(params.get('sem')) || 1;
+
+    // --- C. DISPLAY TITLES (For the user to see) ---
+    const titleMap = {
+        'bcom': 'B.Com',
+        'bca': 'BCA', 'bba': 'BBA',
+        'mba': 'MBA', 'mca': 'MCA', 'mcom': 'M.Com'
+    };
+    // If we have a nice name, use it; otherwise uppercase the code
+    const displayTitle = titleMap[dbQueryCode] || dbQueryCode.toUpperCase();
+
+    // --- D. UPDATE UI ---
+    document.getElementById('courseTitle').innerText = displayTitle + " Study Materials";
+
+    // Generate Semester Links
+    const totalSems = ['mba', 'mca', 'mcom'].includes(dbQueryCode) ? 4 : 6;
+    const nav = document.getElementById('semNav');
+    nav.innerHTML = ''; 
+
+    for (let i = 1; i <= totalSems; i++) {
+        const a = document.createElement('a');
+        a.innerText = `Semester ${i}`;
+        a.className = `sem-link ${currentSem === i ? 'active' : ''}`;
+        a.href = `course.html?c=${dbQueryCode}&sem=${i}`;
+        nav.appendChild(a);
+    }
+
+    // --- E. LOAD DATA (USING LOWERCASE QUERY) ---
+    console.log(`Searching for: course_code == "${dbQueryCode}"`); // Debugging line
+
+    db.collection("content_hub_materials")
+      .where("course_code", "==", dbQueryCode) // Uses 'bcom', not 'B.Com'
+      .where("semester", "==", currentSem)
+      .get()
+      .then((querySnapshot) => {
+          const grid = document.getElementById('subjectGrid');
+          grid.innerHTML = ""; 
+
+          if (querySnapshot.empty) {
+              grid.innerHTML = `
+                <div style="text-align:center; grid-column: 1 / -1; padding: 40px; color: #666;">
+                    <h3>No materials found yet.</h3>
+                    <p>We looked for <b>${displayTitle}</b> (Semester ${currentSem}).</p>
+                    <p><i>Tip: Use the Admin Panel to upload content for this semester!</i></p>
+                </div>`;
+              return;
+          }
+
+          querySnapshot.forEach((doc) => {
+              const data = doc.data();
+              
+              const card = `
+                <div class="sub-card">
+                    <span class="subject-tag">${data.subject_name || 'Subject'}</span>
+                    <h3 style="margin: 10px 0; color:#333;">${data.title}</h3>
+                    <a href="${data.file_path}" target="_blank" class="download-btn">
+                       <i class="fas fa-file-pdf"></i> View Material
+                    </a>
+                </div>
+              `;
+              grid.innerHTML += card;
+          });
+      })
+      .catch((error) => {
+          console.error("Error:", error);
+          document.getElementById('subjectGrid').innerHTML = `<p style="color:red; text-align:center;">Error loading data: ${error.message}</p>`;
+      });
+</script>
+<footer style="padding:28px;text-align:center;color:#666">2026 VIDYA Project | Developed by Samson Varghese, Ewin Job, Jeremiah AR</footer>
+</body>
+</html>

@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Colleges - VIDYA Admin</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background: #f4f6f9; padding: 20px; font-family: 'Segoe UI', sans-serif; }
+        .admin-wrapper { max-width: 1000px; margin: 0 auto; background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+        .admin-header { background: linear-gradient(135deg, #4338ca 0%, #6366f1 100%); color: white; padding: 20px 30px; }
+        .tabs { display: flex; background: #f8f9fa; border-bottom: 1px solid #ddd; }
+        .tab-btn { flex: 1; padding: 15px; border: none; background: none; font-weight: 700; color: #666; cursor: pointer; transition: 0.3s; border-bottom: 3px solid transparent; }
+        .tab-btn:hover { background: #e0e7ff; color: #4338ca; }
+        .tab-btn.active { color: #4338ca; border-bottom: 3px solid #4338ca; background: white; }
+        .form-section { display: none; padding: 30px; }
+        .form-section.active { display: block; animation: slideIn 0.3s ease-out; }
+        .form-control, .form-select { border-radius: 8px; padding: 10px; border: 1px solid #ddd; }
+        .btn-submit { background-color: #4338ca; color: white; width: 100%; padding: 12px; font-weight: bold; border-radius: 8px; border: none; margin-top: 20px; }
+        .btn-cancel { background-color: #6c757d; color: white; width: 100%; padding: 12px; font-weight: bold; border-radius: 8px; border: none; margin-top: 10px; display: none; }
+        #statusMsg { position: fixed; bottom: 30px; right: 30px; background: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.15); font-weight: bold; display: none; z-index: 9999; }
+        .course-list-wrapper { margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; }
+        .course-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #f0f0f0; }
+        .course-item:last-child { border-bottom: none; }
+        .course-item:hover { background-color: #f9fafb; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div class="admin-wrapper">
+    <div class="admin-header">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h2 style="margin:0;" id="pageTitle"><i class="fas fa-university me-2"></i>Add New Data</h2>
+            <a href="admin-dashboard.html" id="backBtn" class="btn btn-light btn-sm fw-bold"><i class="fas fa-arrow-left me-1"></i> Dashboard</a>
+        </div>
+    </div>
+    
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('college')">College Details</button>
+        <button class="tab-btn" onclick="switchTab('course')">Manage Courses</button>
+    </div>
+
+    <div id="college" class="form-section active">
+        <h5 class="text-primary mb-3">General Information</h5>
+        <div class="row g-3">
+            <div class="col-md-6"><label>College Name</label><input type="text" id="colName" class="form-control"></div>
+            <div class="col-md-6"><label>Affiliated University</label><input type="text" id="colUniv" class="form-control" placeholder="e.g. Calicut University"></div>
+            
+            <div class="col-md-6"><label>Location</label><input type="text" id="colLoc" class="form-control"></div>
+            <div class="col-md-6">
+                <label>District</label>
+                <select id="colDist" class="form-select">
+                    <option>Kozhikode</option><option>Ernakulam</option><option>Thrissur</option><option>Palakkad</option><option>Trivandrum</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label>Stream</label>
+                <select id="colStream" class="form-select">
+                    <option>Engineering</option><option>Arts & Science</option><option>Management</option><option>Medical</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label>Type</label>
+                <select id="colType" class="form-select">
+                    <option>Government</option><option>Private</option><option>Aided</option><option>Autonomous</option>
+                </select>
+            </div>
+            <div class="col-12"><label>Description</label><textarea id="colDesc" class="form-control" rows="3"></textarea></div>
+            
+            <h5 class="text-primary mt-4 mb-3">Details</h5>
+            <div class="col-md-6"><label>Education Mode</label><select id="colMode" class="form-select"><option>Offline</option><option>Online</option></select></div>
+            <div class="col-md-6"><label>Ranking</label><input type="text" id="colRank" class="form-control"></div>
+            <div class="col-12"><label>Facilities</label><textarea id="colFac" class="form-control" rows="2"></textarea></div>
+            
+            <h5 class="text-primary mt-4 mb-3">Media & Contact</h5>
+            <div class="col-md-6"><label>Logo URL</label><input type="text" id="colLogo" class="form-control"></div>
+            <div class="col-md-6"><label>Video URL</label><input type="text" id="colVideo" class="form-control"></div>
+            
+            <div class="col-md-6"><label>Website</label><input type="text" id="colWeb" class="form-control"></div>
+            <div class="col-md-6"><label>Social Media URL</label><input type="text" id="colSocial" class="form-control" placeholder="Instagram/LinkedIn Link"></div>
+            
+            <div class="col-md-12"><label>Map Embed</label><input type="text" id="colMap" class="form-control"></div>
+            <div class="col-md-3"><label>Img 1</label><input type="text" id="colImg1" class="form-control"></div>
+            <div class="col-md-3"><label>Img 2</label><input type="text" id="colImg2" class="form-control"></div>
+            <div class="col-md-3"><label>Img 3</label><input type="text" id="colImg3" class="form-control"></div>
+            <div class="col-md-3"><label>Img 4</label><input type="text" id="colImg4" class="form-control"></div>
+            <div class="col-md-6"><label>Phone</label><input type="text" id="colPhone" class="form-control"></div>
+            <div class="col-md-6"><label>Email</label><input type="text" id="colEmail" class="form-control"></div>
+        </div>
+        <button class="btn-submit" id="saveCollegeBtn" onclick="handleCollegeSave()">SAVE COLLEGE</button>
+    </div>
+
+    <div id="course" class="form-section">
+        <div class="mb-4 p-3 bg-light rounded border">
+            <label class="fw-bold text-primary">Select College to Manage Courses</label>
+            <select id="courseCollegeSelect" class="form-select mt-2" onchange="loadCoursesForCollege(this.value)">
+                <option value="">-- Select College --</option>
+            </select>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-8"><label>Course Name</label><input type="text" id="courseName" class="form-control" placeholder="e.g. B.Tech Computer Science"></div>
+            <div class="col-md-4">
+                <label>Level</label>
+                <select id="courseLevel" class="form-select"><option>UG</option><option>PG</option><option>Diploma</option><option>Ph.D</option></select>
+            </div>
+            <div class="col-md-4"><label>Duration</label><input type="text" id="courseDur" class="form-control"></div>
+            <div class="col-md-4"><label>Fees</label><input type="text" id="courseFees" class="form-control"></div>
+            <div class="col-md-4"><label>Seats</label><input type="text" id="courseSeats" class="form-control"></div>
+            <div class="col-md-6"><label>Entrance Exam</label><input type="text" id="courseExam" class="form-control"></div>
+            <div class="col-md-6"><label>Mode</label><input type="text" id="courseMode" class="form-control" value="Offline"></div>
+            
+            <h5 class="text-primary mt-4">Admissions & Info</h5>
+            <div class="col-12"><label>Eligibility Criteria</label><textarea id="courseElig" class="form-control" rows="2"></textarea></div>
+            <div class="col-12"><label>Admission Process</label><textarea id="courseAdmin" class="form-control" rows="2"></textarea></div>
+            <div class="col-12"><label>Placement Info</label><textarea id="coursePlace" class="form-control" rows="2"></textarea></div>
+        </div>
+        
+        <button class="btn-submit" id="saveCourseBtn" onclick="saveCourse()">ADD COURSE</button>
+        <button class="btn-cancel" id="cancelEditBtn" onclick="cancelEditMode()">CANCEL EDIT</button>
+
+        <div class="course-list-wrapper">
+            <h5 class="text-secondary mb-3">Existing Courses</h5>
+            <div id="existingCoursesList" class="p-2 border rounded bg-white">
+                <p class="text-muted text-center my-3">Select a college to view courses.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="statusMsg"></div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, doc, getDoc, updateDoc, getDocs, orderBy, query, where, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBt5DvViwm5ls_B4CWKYIYhMutJJ9opw_Y",
+        authDomain: "vidyaproject-c4a1d.firebaseapp.com",
+        projectId: "vidyaproject-c4a1d",
+        storageBucket: "vidyaproject-c4a1d.firebasestorage.app",
+        messagingSenderId: "637214484165",
+        appId: "1:637214484165:web:f23e84c08cd6069f6fb2ac",
+        measurementId: "G-647MPHBDGW"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const editId = urlParams.get('id'); 
+    let editingCourseId = null;
+    let isDirty = false; 
+
+    // --- SECURITY CHECK (UPDATED) ---
+    onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+            window.location.href = "admin_login.html";
+            return;
+        }
+        try {
+            const userDoc = await getDoc(doc(db, "users", user.uid));
+            if (!userDoc.exists() || userDoc.data().role !== "admin") {
+                alert("Access Denied: Admins Only.");
+                window.location.href = "index.html";
+            } else {
+                await loadDropdown();
+                if(editId) { enableEditMode(editId); }
+            }
+        } catch (error) {
+            window.location.href = "index.html";
+        }
+    });
+
+    document.querySelectorAll('input, select, textarea').forEach(el => {
+        el.addEventListener('input', () => { isDirty = true; });
+        el.addEventListener('change', () => { isDirty = true; });
+    });
+
+    document.getElementById('backBtn').addEventListener('click', (e) => {
+        if(isDirty) {
+            if(!confirm("⚠️ You have unsaved changes!\n\nAre you sure you want to leave without saving?")) {
+                e.preventDefault(); 
+            }
+        }
+    });
+
+    window.addEventListener('beforeunload', (e) => {
+        if (isDirty) {
+            e.preventDefault();
+            e.returnValue = ''; 
+        }
+    });
+
+    async function enableEditMode(id) {
+        document.getElementById('pageTitle').innerHTML = '<i class="fas fa-edit me-2"></i>Edit College';
+        document.getElementById('saveCollegeBtn').innerText = "UPDATE COLLEGE";
+        try {
+            const docSnap = await getDoc(doc(db, "colleges", id));
+            if (docSnap.exists()) {
+                const d = docSnap.data();
+                set('colName', d.name);
+                set('colUniv', d.university || '');
+                set('colLoc', d.location);
+                set('colDist', d.district);
+                set('colStream', d.stream);
+                set('colType', d.institution_type);
+                set('colDesc', d.description);
+                set('colMode', d.education_mode);
+                set('colRank', d.ranking);
+                set('colFac', d.facilities ? d.facilities.join(', ') : '');
+                set('colLogo', d.logo_path);
+                set('colVideo', d.video_path);
+                set('colWeb', d.website);
+                set('colSocial', d.social_media || '');
+                set('colMap', d.map_embed);
+                if(d.images) {
+                    set('colImg1', d.images[0] || '');
+                    set('colImg2', d.images[1] || '');
+                    set('colImg3', d.images[2] || '');
+                    set('colImg4', d.images[3] || '');
+                }
+                set('colPhone', d.phone);
+                set('colEmail', d.email);
+
+                const sel = document.getElementById('courseCollegeSelect');
+                sel.value = id;
+                loadCoursesForCollege(id);
+                isDirty = false; 
+            }
+        } catch(e) { console.error(e); }
+    }
+
+    window.handleCollegeSave = async function() {
+        const name = get('colName');
+        if(!name) { showMsg("College Name is Required!", false); return; }
+        
+        const data = {
+            name: name,
+            university: get('colUniv'),
+            location: get('colLoc'),
+            district: get('colDist'),
+            stream: get('colStream'),
+            institution_type: get('colType'),
+            description: get('colDesc'),
+            education_mode: get('colMode'),
+            ranking: get('colRank'),
+            facilities: get('colFac') ? get('colFac').split(',') : [],
+            logo_path: get('colLogo'),
+            video_path: get('colVideo'),
+            images: [get('colImg1'), get('colImg2'), get('colImg3'), get('colImg4')].filter(s=>s),
+            phone: get('colPhone'),
+            email: get('colEmail'),
+            website: get('colWeb'),
+            social_media: get('colSocial'),
+            map_embed: get('colMap'),
+            updatedAt: new Date()
+        };
+
+        try {
+            if(editId) {
+                await updateDoc(doc(db, "colleges", editId), data);
+                showMsg("College Updated Successfully!");
+            } else {
+                data.createdAt = new Date();
+                data.rating = 0; 
+                await addDoc(collection(db, "colleges"), data);
+                showMsg("College Saved Successfully!");
+                clearForm();
+            }
+            isDirty = false; 
+        } catch(e) { showMsg("Error: " + e.message, false); }
+    };
+
+    window.loadCoursesForCollege = async function(colId) {
+        const listDiv = document.getElementById('existingCoursesList');
+        if(!colId) { listDiv.innerHTML = '<p class="text-muted text-center my-3">Select a college to view courses.</p>'; return; }
+        
+        listDiv.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary"></div></div>';
+        
+        try {
+            const q = query(collection(db, "courses"), where("college_id", "==", colId));
+            const snap = await getDocs(q);
+            
+            if(snap.empty) {
+                listDiv.innerHTML = '<p class="text-muted text-center my-3">No courses found for this college.</p>';
+                return;
+            }
+
+            listDiv.innerHTML = "";
+            snap.forEach(docSnap => {
+                const c = docSnap.data();
+                const safeData = encodeURIComponent(JSON.stringify({id: docSnap.id, ...c}));
+                
+                listDiv.innerHTML += `
+                    <div class="course-item">
+                        <div>
+                            <strong>${c.name}</strong> <span class="badge bg-secondary ms-2">${c.level}</span>
+                            <br><small class="text-muted">${c.duration} • ₹${c.fees}</small>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="triggerEditCourse('${safeData}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteCourse('${docSnap.id}', '${colId}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+        } catch(e) { console.error(e); }
+    };
+
+    window.triggerEditCourse = function(encodedData) {
+        const c = JSON.parse(decodeURIComponent(encodedData));
+        editingCourseId = c.id;
+        
+        set('courseName', c.name);
+        set('courseLevel', c.level);
+        set('courseDur', c.duration);
+        set('courseFees', c.fees);
+        set('courseSeats', c.seats);
+        set('courseExam', c.entrance_exam);
+        set('courseMode', c.mode);
+        set('courseElig', c.eligibility);
+        set('courseAdmin', c.admission_process);
+        set('coursePlace', c.placement_info);
+        
+        document.getElementById('saveCourseBtn').innerText = "UPDATE COURSE";
+        document.getElementById('saveCourseBtn').classList.replace('btn-submit', 'btn-warning');
+        document.getElementById('cancelEditBtn').style.display = 'block';
+        window.scrollTo(0, 0);
+        isDirty = true; 
+    };
+
+    window.cancelEditMode = function() {
+        if(isDirty && !confirm("Discard unsaved changes?")) return;
+        editingCourseId = null;
+        clearCourseForm();
+        document.getElementById('saveCourseBtn').innerText = "ADD COURSE";
+        document.getElementById('saveCourseBtn').classList.replace('btn-warning', 'btn-submit');
+        document.getElementById('cancelEditBtn').style.display = 'none';
+        isDirty = false;
+    };
+
+    window.saveCourse = async function() {
+        const colId = get('courseCollegeSelect');
+        if(!colId) { showMsg("Please Select a College!", false); return; }
+        
+        const data = {
+            college_id: colId, 
+            name: get('courseName'), 
+            level: get('courseLevel'), 
+            duration: get('courseDur'),
+            fees: get('courseFees'), 
+            seats: get('courseSeats'), 
+            entrance_exam: get('courseExam'), 
+            mode: get('courseMode'), 
+            eligibility: get('courseElig'), 
+            admission_process: get('courseAdmin'), 
+            placement_info: get('coursePlace'),
+            updatedAt: new Date()
+        };
+
+        try {
+            if(editingCourseId) {
+                await updateDoc(doc(db, "courses", editingCourseId), data);
+                showMsg("Course Updated Successfully!");
+                cancelEditMode(); 
+            } else {
+                data.createdAt = new Date();
+                await addDoc(collection(db, "courses"), data);
+                showMsg("Course Added!");
+                clearCourseForm();
+            }
+            loadCoursesForCollege(colId);
+            isDirty = false; 
+        } catch(e) { showMsg("Error: " + e.message, false); }
+    };
+
+    window.deleteCourse = async function(courseId, colId) {
+        if(!confirm("Permanently delete this course?")) return;
+        try {
+            await deleteDoc(doc(db, "courses", courseId));
+            showMsg("Course Deleted.");
+            loadCoursesForCollege(colId);
+        } catch(e) { showMsg("Error: " + e.message, false); }
+    };
+
+    const get = (id) => document.getElementById(id).value.trim();
+    const set = (id, val) => { if(document.getElementById(id)) document.getElementById(id).value = val; };
+    const showMsg = (msg, success=true) => {
+        const el = document.getElementById('statusMsg');
+        el.innerText = msg;
+        el.style.display = 'block';
+        el.style.borderLeft = success ? "5px solid green" : "5px solid red";
+        setTimeout(() => el.style.display = 'none', 3000);
+    };
+
+    function clearForm() {
+        document.querySelectorAll('#college input, #college textarea').forEach(el => el.value = '');
+    }
+    
+    function clearCourseForm() {
+        document.querySelectorAll('#course input, #course textarea').forEach(el => el.value = '');
+    }
+
+    async function loadDropdown() {
+        const sel = document.getElementById('courseCollegeSelect');
+        const snap = await getDocs(query(collection(db, "colleges"), orderBy("name")));
+        sel.innerHTML = "<option value=''>-- Select College --</option>";
+        snap.forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = d.id;
+            opt.innerText = d.data().name;
+            if(editId && editId === d.id) opt.selected = true; 
+            sel.appendChild(opt);
+        });
+        if(editId) loadCoursesForCollege(editId);
+    }
+
+    window.switchTab = function(id) {
+        document.querySelectorAll('.form-section').forEach(e => e.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        event.target.classList.add('active');
+    }
+</script>
+</body>
+</html>

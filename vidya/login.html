@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - VIDYA</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+
+  <style>
+    body, html { height: 100%; margin: 0; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+    .login-wrapper { display: flex; height: 100vh; width: 100%; }
+
+    /* --- LEFT PANEL --- */
+    .left-panel {
+      width: 50%;
+      background: linear-gradient(135deg, rgba(76, 29, 149, 0.8), rgba(110, 27, 214, 0.7)),
+                  url('assets/bg.jpg');
+      background-size: cover;
+      background-position: center;
+      color: white; display: flex; flex-direction: column;
+      justify-content: center; padding: 3rem;
+      position: relative;
+    }
+    .left-panel h1 { font-weight: 900; font-size: 3.5rem; margin-bottom: 10px; letter-spacing: 1px; }
+    .left-panel p { font-size: 1.2rem; opacity: 0.95; font-weight: 400; line-height: 1.4; }
+
+    /* --- RIGHT PANEL --- */
+    .right-panel {
+      width: 60%;
+      background-color: white;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+
+    .form-container { width: 100%; max-width: 400px; }
+    .form-title { color: #2e1065; font-weight: 800; margin-bottom: 25px; font-size: 2.2rem; text-align: center; }
+
+    .form-label { font-weight: 600; color: #444; font-size: 0.9rem; margin-bottom: 4px; }
+    .form-control { padding: 10px 12px; border-radius: 8px; border: 1px solid #ddd; background: #f8f9fa; font-size: 0.95rem; }
+    .form-control:focus { border-color: #6e1bd6; box-shadow: 0 0 0 0.2rem rgba(110, 27, 214, 0.1); background: white; }
+
+    .btn-purple {
+      background: #6e1bd6;
+      color: white; width: 100%; padding: 12px; border: none;
+      font-weight: bold; border-radius: 8px; font-size: 1rem;
+      margin-top: 15px; transition: 0.3s;
+    }
+    .btn-purple:hover { background: #4c1d95; transform: translateY(-1px); }
+
+    .password-wrapper { position: relative; }
+    .toggle-password { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #999; }
+
+    .forgot-link {
+        display: block; text-align: right; font-size: 0.85rem; margin-top: 5px;
+        color: #6e1bd6; text-decoration: none; font-weight: 600; cursor: pointer;
+    }
+    .forgot-link:hover { text-decoration: underline; }
+
+    @media (max-width: 900px) {
+      body { overflow-y: auto; }
+      .login-wrapper { flex-direction: column; }
+      .left-panel { width: 100%; height: 200px; padding: 2rem; text-align: center; }
+      .right-panel { width: 100%; height: auto; padding: 40px 20px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="login-wrapper">
+    <div class="left-panel">
+      <h1>VIDYA</h1>
+      <p>Student Portal Login</p>
+    </div>
+
+    <div class="right-panel">
+      <div class="form-container">
+        <h2 class="form-title">Login</h2>
+
+        <div id="errorMsg" class="alert alert-danger" style="display:none; padding: 8px; font-size: 0.85rem;"></div>
+        <div id="successMsg" class="alert alert-success" style="display:none; padding: 8px; font-size: 0.85rem;"></div>
+
+        <form id="loginForm">
+          <div class="mb-3">
+            <label class="form-label">Email Address</label>
+            <input type="email" id="email" class="form-control" placeholder="name@example.com" required />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Password</label>
+            <div class="password-wrapper">
+              <input type="password" id="password" class="form-control" placeholder="password" required />
+              <i class="fas fa-eye toggle-password" id="togglePassIcon"></i>
+            </div>
+            <a href="#" class="forgot-link" data-bs-toggle="modal" data-bs-target="#forgotModal">Forgot Password?</a>
+          </div>
+
+          <button type="submit" id="loginBtn" class="btn-purple">Login</button>
+        </form>
+
+        <p class="mt-4 text-center text-muted" style="font-size: 0.9rem;">
+          Don't have an account?
+          <a href="register.html" style="color:#6e1bd6; font-weight:700; text-decoration:none;">Register</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="forgotModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header border-0">
+          <h5 class="modal-title fw-bold" style="color:#2e1065;">Reset Password</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-muted small mb-3">Enter your registered email address to receive a reset link.</p>
+          <input type="email" id="resetEmail" class="form-control" placeholder="name@example.com">
+          <p id="resetMsg" class="mt-2 small text-center fw-bold" style="display:none;"></p>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-purple" id="sendResetBtn" style="width: auto; margin-top:0;">Send Link</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    // --- FIREBASE CONFIG ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyBt5DvViwm5ls_B4CWKYIYhMutJJ9opw_Y",
+      authDomain: "vidyaproject-c4a1d.firebaseapp.com",
+      projectId: "vidyaproject-c4a1d",
+      storageBucket: "vidyaproject-c4a1d.firebasestorage.app",
+      messagingSenderId: "637214484165",
+      appId: "1:637214484165:web:f23e84c08cd6069f6fb2ac",
+      measurementId: "G-647MPHBDGW"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const $ = (id) => document.getElementById(id);
+    const showErr = (msg) => { $("errorMsg").innerText = msg; $("errorMsg").style.display = "block"; };
+    
+    // Toggle Password
+    $("togglePassIcon").addEventListener("click", () => {
+      const el = $("password");
+      const icon = $("togglePassIcon");
+      if (el.type === "password") { el.type = "text"; icon.classList.replace("fa-eye", "fa-eye-slash"); }
+      else { el.type = "password"; icon.classList.replace("fa-eye-slash", "fa-eye"); }
+    });
+
+    // --- STUDENT REDIRECT & DB CHECK ---
+    async function redirectStudent(user) {
+      const ref = doc(db, "users", user.uid);
+      const snap = await getDoc(ref);
+
+      if (!snap.exists()) {
+        // Create basic doc if missing (Fallback)
+        await setDoc(ref, {
+          uid: user.uid,
+          name: user.displayName || "Student",
+          email: user.email,
+          role: "student",
+          createdAt: new Date(),
+          lastLogin: new Date(),
+          savedColleges: []
+        }, { merge: true });
+      } else {
+        // Update last login
+        await updateDoc(ref, { lastLogin: new Date() });
+      }
+      window.location.href = "index.html";
+    }
+
+    // --- LOGIN SUBMIT ---
+    $("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      $("errorMsg").style.display = "none";
+      
+      const email = $("email").value.trim();
+      const pass = $("password").value;
+      const btn = $("loginBtn");
+
+      btn.disabled = true;
+      btn.innerText = "Verifying...";
+
+      try {
+        const cred = await signInWithEmailAndPassword(auth, email, pass);
+        
+        if (!cred.user.emailVerified) {
+           showErr("Please verify your email address first.");
+           btn.disabled = false;
+           btn.innerText = "Login";
+           return;
+        }
+        
+        await redirectStudent(cred.user);
+      } catch (error) {
+        console.error("Login Error:", error.code);
+        btn.disabled = false;
+        btn.innerText = "Login";
+
+        if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
+            showErr("Invalid Email or Password.");
+        } else if (error.code === 'auth/too-many-requests') {
+            showErr("Too many failed attempts. Try again later.");
+        } else {
+            showErr("Login Failed: " + error.message);
+        }
+      }
+    });
+
+    // --- FORGOT PASSWORD ---
+    $("sendResetBtn").addEventListener("click", async () => {
+        const email = $("resetEmail").value.trim();
+        const msg = $("resetMsg");
+        
+        if (!email) {
+            msg.innerText = "Please enter your email."; msg.style.color = "red"; msg.style.display = "block"; return;
+        }
+
+        try {
+            await sendPasswordResetEmail(auth, email);
+            msg.innerText = "Reset link sent! Check your inbox."; msg.style.color = "green"; msg.style.display = "block";
+        } catch (error) {
+            msg.innerText = "Error: " + error.message; msg.style.color = "red"; msg.style.display = "block";
+        }
+    });
+  </script>
+  <footer style="padding:28px;text-align:center;color:#666">2026 VIDYA Project | Developed by Samson Varghese, Ewin Job, Jeremiah AR</footer>
+</body>
+</html>

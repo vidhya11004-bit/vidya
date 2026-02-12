@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Portal - VIDYA</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body, html { height: 100%; margin: 0; font-family: 'Segoe UI', sans-serif; }
+        
+        /* --- FIX: HIDE DEFAULT BROWSER ICONS --- */
+        /* This specific rule tells Edge to hide its native 'eye' button */
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear {
+            display: none !important;
+        }
+
+        .login-wrapper { display: flex; height: 100vh; width: 100%; }
+        
+        /* Left Panel */
+        .left-panel {
+            width: 50%;
+            background: linear-gradient(135deg, rgba(76, 29, 149, 0.9), rgba(91, 33, 182, 0.85)),
+                        url('assets/bg.jpg');
+            background-size: cover;
+            background-position: center;
+            color: white; 
+            display: flex; 
+            flex-direction: column;
+            justify-content: center; 
+            padding: 4rem;
+            position: relative;
+        }
+        
+        .right-panel {
+            background-color: white; width: 50%; display: flex;
+            align-items: center; justify-content: center;
+        }
+
+        .form-container { width: 100%; max-width: 400px; padding: 20px; }
+        
+        .btn-admin { 
+            background-color: #2e1065; color: white; padding: 12px; 
+            font-weight: 600; width: 100%; border:none; border-radius: 50px; 
+            transition: 0.3s;
+        }
+        .btn-admin:hover { background-color: #000; }
+
+        .forgot-link {
+            text-decoration: none; color: #6b7280; font-size: 0.9rem; float: right; margin-bottom: 15px; cursor: pointer;
+        }
+        .forgot-link:hover { color: #2e1065; text-decoration: underline; }
+
+        /* Custom Eye Icon Styling */
+        .input-group-text { background: white; border-left: none; cursor: pointer; }
+        #adminPassword { border-right: none; }
+        
+        @media (max-width: 768px) {
+            .login-wrapper { flex-direction: column; }
+            .left-panel, .right-panel { width: 100%; height: auto; padding: 40px 20px; }
+            .left-panel { min-height: 200px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-wrapper">
+        <div class="left-panel">
+            <h1>Admin Portal</h1>
+            <p>Authorized personnel only.</p>
+        </div>
+
+        <div class="right-panel">
+            <div class="form-container">
+                <h2 class="mb-4 fw-bold" style="color: #2e1065;">Admin Login</h2>
+                <div id="admin-error" class="alert alert-danger" style="display:none;"></div>
+
+                <form id="adminForm">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Email</label>
+                        <input type="email" id="adminEmail" class="form-control" required placeholder="admin@vidya.com">
+                    </div>
+                    
+                    <div class="mb-2">
+                        <label class="form-label fw-bold">Password</label>
+                        <div class="input-group">
+                            <input type="password" id="adminPassword" class="form-control" required>
+                            <button class="btn btn-outline-secondary" type="button" id="togglePasswordBtn" style="border-color: #dee2e6;">
+                                <i class="fas fa-eye" id="eyeIcon"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="clearfix">
+                        <span class="forgot-link" data-bs-toggle="modal" data-bs-target="#forgotModal">Forgot Password?</span>
+                    </div>
+
+                    <button type="submit" class="btn btn-admin mt-3">Login to Dashboard</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="forgotModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Reset Password</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small">Enter your admin email address. We'll send you a link to reset your password.</p>
+                    <div id="reset-msg" class="alert" style="display:none;"></div>
+                    <div class="mb-3">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" id="resetEmail" class="form-control" placeholder="name@example.com">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="sendResetBtn" style="background-color: #2e1065; border:none;">Send Reset Link</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBt5DvViwm5ls_B4CWKYIYhMutJJ9opw_Y",
+            authDomain: "vidyaproject-c4a1d.firebaseapp.com",
+            projectId: "vidyaproject-c4a1d",
+            storageBucket: "vidyaproject-c4a1d.firebasestorage.app",
+            messagingSenderId: "637214484165",
+            appId: "1:637214484165:web:f23e84c08cd6069f6fb2ac",
+            measurementId: "G-647MPHBDGW"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- 1. EYE TOGGLE LOGIC ---
+        document.getElementById('togglePasswordBtn').addEventListener('click', function() {
+            const passwordInput = document.getElementById('adminPassword');
+
+            if (passwordInput.type === "password") {
+                // Show Password
+                passwordInput.type = "text";
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                // Hide Password
+                passwordInput.type = "password";
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+
+        // --- 2. FORGOT PASSWORD LOGIC ---
+        document.getElementById('sendResetBtn').addEventListener('click', async () => {
+            const email = document.getElementById('resetEmail').value.trim();
+            const msgBox = document.getElementById('reset-msg');
+            const btn = document.getElementById('sendResetBtn');
+
+            if(!email) {
+                msgBox.className = "alert alert-danger";
+                msgBox.innerText = "Please enter your email.";
+                msgBox.style.display = "block";
+                return;
+            }
+
+            try {
+                btn.disabled = true;
+                btn.innerText = "Sending...";
+                
+                await sendPasswordResetEmail(auth, email);
+                
+                msgBox.className = "alert alert-success";
+                msgBox.innerText = "Check your email! Password reset link sent.";
+                msgBox.style.display = "block";
+                document.getElementById('resetEmail').value = ""; // Clear input
+            } catch (error) {
+                console.error(error);
+                msgBox.className = "alert alert-danger";
+                msgBox.innerText = error.message;
+                msgBox.style.display = "block";
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Send Reset Link";
+            }
+        });
+
+        // --- 3. LOGIN LOGIC ---
+        document.getElementById('adminForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+            const errorBox = document.getElementById('admin-error');
+
+            errorBox.style.display = 'none';
+            errorBox.innerText = 'Checking permissions...';
+
+            try {
+                // Sign in
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // Check Admin Role
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                
+                if (userDoc.exists() && userDoc.data().role === 'admin') {
+                    window.location.href = "admin-dashboard.html";
+                } else {
+                    await signOut(auth);
+                    throw new Error("Access Denied: You do not have Admin privileges.");
+                }
+
+            } catch (error) {
+                console.error(error);
+                errorBox.innerText = "Login Failed: " + error.message;
+                errorBox.style.display = 'block';
+            }
+        });
+    </script>
+    <footer class="text-center text-muted mt-4 small">
+  © 2026 VIDYA · Admin Panel
+</footer>
+</body>
+</html>

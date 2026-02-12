@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>VIDYA Admin - Master Dashboard</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #f4f6f9; padding: 20px; font-family: 'Segoe UI', sans-serif; }
+        .admin-wrapper { max-width: 1100px; margin: 0 auto; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); overflow: hidden; }
+        
+        .admin-header { background: linear-gradient(135deg, #6e1bd6 0%, #4a148c 100%); color: white; padding: 25px; text-align: center; }
+        .admin-header h2 { margin: 0; font-weight: 800; letter-spacing: 1px; }
+        
+        .tabs { display: flex; background: #f8f9fa; border-bottom: 1px solid #ddd; }
+        .tab-btn { flex: 1; padding: 15px; border: none; background: none; font-weight: 700; color: #666; cursor: pointer; transition: 0.3s; border-bottom: 3px solid transparent; }
+        .tab-btn:hover { background: #e9ecef; color: #6e1bd6; }
+        .tab-btn.active { color: #6e1bd6; border-bottom: 3px solid #6e1bd6; background: white; }
+        
+        .form-section { display: none; padding: 30px; }
+        .form-section.active { display: block; animation: slideIn 0.3s ease-out; }
+        
+        .section-label { background: #f1f3f5; padding: 8px 15px; border-left: 4px solid #6e1bd6; font-weight: 700; color: #333; margin: 25px 0 15px 0; }
+        label { font-weight: 600; font-size: 0.9rem; color: #555; margin-bottom: 5px; }
+        .form-control, .form-select { border-radius: 8px; padding: 10px; border: 1px solid #ddd; }
+        
+        .btn-submit { background-color: #6e1bd6; color: white; width: 100%; padding: 12px; font-weight: bold; border-radius: 8px; border: none; margin-top: 20px; }
+        .btn-submit:hover { background-color: #5a12b5; }
+        
+        #statusMsg { position: fixed; bottom: 30px; right: 30px; background: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.15); font-weight: bold; display: none; z-index: 9999; }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div class="admin-wrapper">
+    <div class="admin-header">
+        <h2><i class="fas fa-database me-2"></i>Database Manager</h2>
+        <a href="index.html" style="color:rgba(255,255,255,0.8); font-size:0.9rem; text-decoration:none;">Go to Home Page</a>
+    </div>
+    
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('college')">Add College</button>
+        <button class="tab-btn" onclick="switchTab('course')">Add Course</button>
+        <button class="tab-btn" onclick="switchTab('material')">Add Material</button>
+    </div>
+
+    <div id="college" class="form-section active">
+        <h5 class="section-label">1. General Information</h5>
+        <div class="row g-3">
+            <div class="col-md-6"><label>College Name *</label><input type="text" id="colName" class="form-control"></div>
+            <div class="col-md-6"><label>Location *</label><input type="text" id="colLoc" class="form-control"></div>
+            <div class="col-md-4">
+                <label>District</label>
+                <select id="colDist" class="form-select">
+                    <option value="Kozhikode">Kozhikode</option>
+                    <option value="Ernakulam">Ernakulam</option>
+                    <option value="Thrissur">Thrissur</option>
+                    <option value="Palakkad">Palakkad</option>
+                    <option value="Trivandrum">Trivandrum</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label>Stream</label>
+                <select id="colStream" class="form-select">
+                    <option value="Engineering">Engineering</option>
+                    <option value="Arts & Science">Arts & Science</option>
+                    <option value="Management">Management</option>
+                    <option value="Medical">Medical</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label>Institution Type</label>
+                <select id="colType" class="form-select">
+                    <option value="Government">Government</option>
+                    <option value="Private">Private</option>
+                    <option value="Aided">Aided</option>
+                    <option value="Autonomous">Autonomous</option>
+                </select>
+            </div>
+            <div class="col-12"><label>Description</label><textarea id="colDesc" class="form-control" rows="3"></textarea></div>
+        </div>
+
+        <h5 class="section-label">2. Academic Details</h5>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label>Education Mode</label>
+                <select id="colMode" class="form-select">
+                    <option value="Offline">Offline</option>
+                    <option value="Online">Online</option>
+                    <option value="Hybrid">Hybrid</option>
+                </select>
+            </div>
+            <div class="col-md-6"><label>Ranking</label><input type="text" id="colRank" class="form-control"></div>
+            <div class="col-12"><label>Facilities (Comma Separated)</label><textarea id="colFac" class="form-control" rows="2"></textarea></div>
+        </div>
+
+        <h5 class="section-label">3. Admissions & Placements</h5>
+        <div class="row g-3">
+            <div class="col-12"><label>Eligibility</label><textarea id="colElig" class="form-control" rows="2"></textarea></div>
+            <div class="col-12"><label>Admission Process</label><textarea id="colAdmin" class="form-control" rows="2"></textarea></div>
+            <div class="col-12"><label>Placement Info</label><textarea id="colPlace" class="form-control" rows="2"></textarea></div>
+        </div>
+
+        <h5 class="section-label">4. Media & Contact</h5>
+        <div class="row g-3">
+            <div class="col-md-6"><label>Logo URL</label><input type="text" id="colLogo" class="form-control"></div>
+            <div class="col-md-6"><label>Video URL</label><input type="text" id="colVideo" class="form-control"></div>
+            <div class="col-md-6"><label>Website URL</label><input type="text" id="colWeb" class="form-control"></div>
+            <div class="col-md-6"><label>Map Embed Code</label><input type="text" id="colMap" class="form-control"></div>
+            
+            <div class="col-md-3"><label>Image 1</label><input type="text" id="colImg1" class="form-control"></div>
+            <div class="col-md-3"><label>Image 2</label><input type="text" id="colImg2" class="form-control"></div>
+            <div class="col-md-3"><label>Image 3</label><input type="text" id="colImg3" class="form-control"></div>
+            <div class="col-md-3"><label>Image 4</label><input type="text" id="colImg4" class="form-control"></div>
+
+            <div class="col-md-6"><label>Phone</label><input type="text" id="colPhone" class="form-control"></div>
+            <div class="col-md-6"><label>Email</label><input type="text" id="colEmail" class="form-control"></div>
+            <div class="col-md-12"><label>Social Link</label><input type="text" id="colSocial" class="form-control"></div>
+        </div>
+
+        <button class="btn-submit" onclick="saveCollege()">SAVE COLLEGE</button>
+    </div>
+
+    <div id="course" class="form-section">
+        <h5 class="section-label">Link to College</h5>
+        <div class="mb-3">
+            <select id="courseCollegeSelect" class="form-select">
+                <option>Loading colleges...</option>
+            </select>
+            <small class="text-muted">Tip: Select the college once, then add multiple courses below one by one.</small>
+        </div>
+
+        <h5 class="section-label">Course Details</h5>
+        <div class="row g-3">
+            <div class="col-md-8"><label>Course Name</label><input type="text" id="courseName" class="form-control" placeholder="e.g. B.Tech Computer Science"></div>
+            <div class="col-md-4">
+                <label>Level</label>
+                <select id="courseLevel" class="form-select">
+                    <option value="UG">UG</option>
+                    <option value="PG">PG</option>
+                    <option value="Diploma">Diploma</option>
+                    <option value="Ph.D">Ph.D</option>
+                </select>
+            </div>
+            <div class="col-md-4"><label>Duration</label><input type="text" id="courseDur" class="form-control"></div>
+            <div class="col-md-4"><label>Fees (Total/Year)</label><input type="text" id="courseFees" class="form-control"></div>
+            <div class="col-md-4"><label>Seats</label><input type="text" id="courseSeats" class="form-control"></div>
+            <div class="col-md-6"><label>Entrance Exam</label><input type="text" id="courseExam" class="form-control"></div>
+            <div class="col-md-6"><label>Study Mode</label><input type="text" id="courseMode" class="form-control" value="Offline"></div>
+        </div>
+
+        <h5 class="section-label">Detailed Info</h5>
+        <div class="row g-3">
+            <div class="col-12"><label>Eligibility</label><textarea id="courseElig" class="form-control" rows="2"></textarea></div>
+            <div class="col-12"><label>Admission Process</label><textarea id="courseAdmin" class="form-control" rows="2"></textarea></div>
+            <div class="col-12"><label>Description</label><textarea id="courseDesc" class="form-control" rows="2"></textarea></div>
+        </div>
+
+        <button class="btn-submit" onclick="saveCourse()">SAVE COURSE (Add Another)</button>
+    </div>
+
+    <div id="material" class="form-section">
+        <h5 class="section-label">Upload Study Material</h5>
+        <div class="mb-3"><label>Subject ID / Code</label><input type="text" id="matCode" class="form-control"></div>
+        <div class="mb-3"><label>Material Title</label><input type="text" id="matTitle" class="form-control"></div>
+        <div class="mb-3"><label>File URL (Drive/PDF Link)</label><input type="text" id="matLink" class="form-control"></div>
+        <button class="btn-submit" onclick="saveMaterial()">SAVE MATERIAL</button>
+    </div>
+
+</div>
+
+<div id="statusMsg"></div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, getDocs, orderBy, query } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    // 1. CONFIGURATION
+    const firebaseConfig = {
+        apiKey: "AIzaSyBt5DvViwm5ls_B4CWKYIYhMutJJ9opw_Y",
+        authDomain: "vidyaproject-c4a1d.firebaseapp.com",
+        projectId: "vidyaproject-c4a1d",
+        storageBucket: "vidyaproject-c4a1d.firebasestorage.app",
+        messagingSenderId: "637214484165",
+        appId: "1:637214484165:web:f23e84c08cd6069f6fb2ac",
+        measurementId: "G-647MPHBDGW"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // AUTH CHECK
+    onAuthStateChanged(auth, (user) => {
+        if (!user) window.location.href = "admin_login.html";
+        else loadDropdown();
+    });
+
+    const get = (id) => document.getElementById(id).value.trim();
+    const showMsg = (msg, success=true) => {
+        const el = document.getElementById('statusMsg');
+        el.innerText = msg;
+        el.style.display = 'block';
+        el.style.borderLeft = success ? "5px solid green" : "5px solid red";
+        setTimeout(() => el.style.display = 'none', 3000);
+    };
+
+    async function loadDropdown() {
+        const sel = document.getElementById('courseCollegeSelect');
+        sel.innerHTML = "<option>Loading...</option>";
+        try {
+            const q = query(collection(db, "colleges"), orderBy("name"));
+            const snap = await getDocs(q);
+            sel.innerHTML = "<option value=''>-- Select College --</option>";
+            snap.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d.id;
+                opt.innerText = d.data().name;
+                sel.appendChild(opt);
+            });
+        } catch(e) { console.error(e); }
+    }
+
+    // SAVE COLLEGE
+    window.saveCollege = async function() {
+        if(!get('colName')) { showMsg("Name Required!", false); return; }
+        
+        const facArr = get('colFac').split(',').map(s=>s.trim()).filter(s=>s);
+        const imgs = [get('colImg1'), get('colImg2'), get('colImg3'), get('colImg4')].filter(s=>s);
+
+        const data = {
+            name: get('colName'),
+            location: get('colLoc'),
+            district: get('colDist'),
+            stream: get('colStream'),
+            institution_type: get('colType'),
+            description: get('colDesc'),
+            rating: 0, // Starts at 0
+            education_mode: get('colMode'),
+            ranking: get('colRank'),
+            facilities: facArr,
+            eligibility: get('colElig'),
+            admission_process: get('colAdmin'),
+            placement_info: get('colPlace'),
+            logo_path: get('colLogo'),
+            video_path: get('colVideo'),
+            // Brochure Removed
+            images: imgs,
+            phone: get('colPhone'),
+            email: get('colEmail'),
+            website: get('colWeb'),
+            social_media: get('colSocial'),
+            map_embed: get('colMap'),
+            createdAt: new Date()
+        };
+
+        try {
+            await addDoc(collection(db, "colleges"), data);
+            showMsg("College Saved Successfully!");
+            loadDropdown();
+            document.querySelectorAll('#college input, #college textarea').forEach(el => el.value = '');
+        } catch(e) { showMsg("Error: " + e.message, false); }
+    };
+
+    // SAVE COURSE
+    window.saveCourse = async function() {
+        const colId = get('courseCollegeSelect');
+        if(!colId) { showMsg("Select a college!", false); return; }
+
+        const data = {
+            college_id: colId,
+            name: get('courseName'),
+            level: get('courseLevel'),
+            duration: get('courseDur'),
+            fees: get('courseFees'),
+            seats: get('courseSeats'),
+            entrance_exam: get('courseExam'),
+            mode: get('courseMode'),
+            eligibility: get('courseElig'),
+            admission_process: get('courseAdmin'),
+            course_description: get('courseDesc'),
+            createdAt: new Date()
+        };
+
+        try {
+            await addDoc(collection(db, "courses"), data);
+            showMsg("Course Added! You can add another for this college.", "green");
+            
+            // Clear inputs BUT NOT THE COLLEGE SELECT
+            document.querySelectorAll('#course input, #course textarea').forEach(el => el.value = '');
+            // Restore defaults
+            document.getElementById('courseMode').value = 'Offline';
+            document.getElementById('courseLevel').value = 'UG';
+        } catch(e) { showMsg("Error: " + e.message, false); }
+    };
+
+    // SAVE MATERIAL
+    window.saveMaterial = async function() {
+        try {
+            await addDoc(collection(db, "materials"), {
+                subject_id: get('matCode'),
+                title: get('matTitle'),
+                file_path: get('matLink'),
+                createdAt: new Date()
+            });
+            showMsg("Material Saved!");
+            document.getElementById('matCode').value = '';
+            document.getElementById('matTitle').value = '';
+            document.getElementById('matLink').value = '';
+        } catch(e) { showMsg("Error", false); }
+    };
+</script>
+
+<script>
+    function switchTab(id) {
+        document.querySelectorAll('.form-section').forEach(e => e.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        event.target.classList.add('active');
+    }
+    window.switchTab = switchTab;
+</script>
+
+</body>
+</html>

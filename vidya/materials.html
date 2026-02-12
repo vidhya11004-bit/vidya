@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Study Materials - VIDYA</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body{font-family: 'Segoe UI', Arial, sans-serif; background:#f4f7fc; margin:0}
+    
+    .material-header { background: linear-gradient(90deg, #6e1bd6, #ff2c92); color: #fff; padding: 30px 20px; text-align: center; }
+    .material-header h1 { margin: 0; font-size: 1.8rem; }
+    .material-header p { opacity: 0.9; margin-top: 5px; }
+    
+    .container { max-width: 800px; margin: 20px auto; padding: 20px; }
+    
+    .content-section { background: #fff; border-radius: 12px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    
+    .resource-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #f0f0f0; }
+    .resource-item:last-child { border-bottom: none; }
+    
+    .btn-view { background: #6e1bd6; color: #fff; padding: 8px 18px; border-radius: 8px; text-decoration: none; font-weight: bold; transition: 0.3s; }
+    .btn-view:hover { background: #5614ab; transform: translateY(-2px); }
+    
+    .type-badge { font-size: 0.7rem; background: #eee; padding: 2px 6px; border-radius: 4px; color: #555; text-transform: uppercase; letter-spacing: 0.5px; font-weight: bold; }
+
+    .back-link { display: inline-block; color: #fff; text-decoration: none; font-weight: 600; border: 1px solid rgba(255, 255, 255, 0.4); padding: 6px 16px; border-radius: 20px; margin-top: 15px; }
+    .back-link:hover { background: #fff; color: #6e1bd6; }
+  </style>
+</head>
+<body>
+
+<div class="material-header">
+    <h1 id="subName">Loading Subject...</h1>
+    <p id="subMeta">...</p>
+    <a href="#" id="backBtn" class="back-link">← Back to Course</a>
+</div>
+
+<div class="container">
+    <div class="content-section">
+        <h3 style="color:#6e1bd6; margin-top:0; border-bottom: 2px solid #f0f0ff; padding-bottom: 10px;">Available Resources</h3>
+        <div id="resources-list">
+            <p style="text-align:center; color:#999; padding: 20px;">Loading materials from database...</p>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="materials_logic.js"></script>
+<footer style="padding:28px;text-align:center;color:#666">2026 VIDYA Project | Developed by Samson Varghese, Ewin Job, Jeremiah AR</footer>
+</body>
+</html>
