@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Details - VIDYA</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
+        .vc-header { background: linear-gradient(90deg, #6e1bd6, #ff2c92); padding: 15px 0; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .vc-brand { font-weight: 800; font-size: 1.5rem; text-decoration: none; color: white; }
+        .vc-btn-back { color: white; text-decoration: none; font-weight: 600; border: 1px solid rgba(255,255,255,0.3); padding: 5px 15px; border-radius: 20px; transition: 0.2s; }
+        .vc-btn-back:hover { background: rgba(255,255,255,0.1); color: white; }
+        .vc-container { max-width: 1200px; margin: 30px auto; padding: 0 20px; display: grid; grid-template-columns: 2fr 1fr; gap: 30px; }
+        .vc-card { background: white; border-radius: 12px; padding: 25px; margin-bottom: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+        .vc-card h3 { color: #6e1bd6; margin-bottom: 20px; font-weight: 700; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; }
+        
+        /* Favorite Button Styling */
+        .btn-fav-custom {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 6px 18px;
+            border-radius: 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+        .btn-fav-custom:hover { background: rgba(255, 255, 255, 0.3); transform: translateY(-1px); color: white; }
+        .btn-fav-custom.is-active { background: #ff4757; border-color: #ff4757; color: white; box-shadow: 0 4px 10px rgba(255, 71, 87, 0.3); }
+        .btn-fav-custom.is-active i { animation: heartBeat 0.3s ease-in-out; }
+        @keyframes heartBeat { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
+
+        /* Star Rating Widget Styling */
+        .star-widget i {
+            font-size: 1.8rem;
+            color: #d1d5db; /* Default grey */
+            cursor: pointer;
+            transition: color 0.2s;
+            margin-right: 5px;
+        }
+        .star-widget i:hover { color: #ffdb4d; }
+        .star-widget i.active { color: #ffc107; /* Bootstrap warning yellow */ }
+
+        /* Other Styles */
+        .course-table { width: 100%; border-collapse: collapse; }
+        .course-table th { text-align: left; padding: 12px; background: #f8f9fa; color: #555; font-size: 0.9rem; }
+        .course-table td { padding: 12px; border-bottom: 1px solid #eee; color: #333; }
+        .acc-item { border: 1px solid #eee; border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
+        .acc-btn { width: 100%; text-align: left; padding: 15px; background: #fcfcfc; border: none; font-weight: 600; cursor: pointer; display: flex; justify-content: space-between; }
+        .acc-content { display: none; padding: 15px; background: white; border-top: 1px solid #eee; color: #555; font-size: 0.95rem; }
+        .sidebar-info p { margin-bottom: 10px; color: #555; }
+        .sidebar-info i { width: 25px; color: #6e1bd6; }
+        .facility-tag { display: inline-block; background: #f3f0ff; color: #6e1bd6; padding: 5px 10px; border-radius: 20px; font-size: 0.85rem; margin: 3px; }
+        .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .gallery-img { width: 100%; height: 100px; object-fit: cover; border-radius: 8px; cursor: pointer; }
+        #lightboxOverlay { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.92); justify-content: center; align-items: center; }
+        #lightboxImage { max-width: 90%; max-height: 90vh; border-radius: 8px; }
+        .lightbox-close { position: absolute; top: 20px; right: 35px; color: #fff; font-size: 40px; cursor: pointer; }
+        @media (max-width: 768px) { .vc-container { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <header class="vc-header">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a href="index.html" class="vc-brand">VIDYA</a>
+            <div class="d-flex gap-2">
+                <button id="favBtn" onclick="toggleFavorite()" class="btn-fav-custom"><i class="far fa-heart"></i> Favorite</button>
+                <a href="index.html" class="vc-btn-back">← Back</a>
+            </div>
+        </div>
+    </header>
+
+    <div style="position: relative; width: 100%; max-width: 1150px; margin: 20px auto; height: 500px; background: #000; border-radius: 15px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.4);">
+        <video id="heroVideo" autoplay muted loop playsinline controls style="width: 100%; height: 100%; object-fit: cover; display: none;">
+            <source src="" type="video/mp4">
+        </video>
+        <div id="heroVideoPlaceholder" style="width:100%; height:100%; background:#333; display:flex; align-items:center; justify-content:center; color:#fff;">
+            <i class="fas fa-video-slash fa-2x me-2"></i> No Video Available
+        </div>
+
+        <div style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 80px 40px 30px; background: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.7) 40%, transparent 100%); display: flex; align-items: center; gap: 20px; z-index: 999; pointer-events: none;">
+            <img id="heroLogo" src="" style="width: 90px; height: 90px; background: #fff; padding: 5px; border-radius: 12px; object-fit: contain; border: 2px solid #fff;" alt="Logo">
+            <div style="display: block;">
+                <h1 id="heroName" style="font-size: 2.5rem; margin: 0; color: #ffffff !important; text-shadow: 3px 3px 10px rgba(0,0,0,1); font-weight: 100; line-height: 1.1;">Loading...</h1>
+                <div style="margin: 12px 0 0; display: flex; align-items: center; gap: 15px;">
+                    <p style="margin: 0; font-size: 1.3rem; color: #ffffff !important; font-weight: 500; text-shadow: 2px 2px 5px rgba(0,0,0,0.8);">
+                        <span id="heroDistrict">...</span> • 
+                        <span id="heroUniversity" style="color:#ffcc00;">...</span>
+                        <span id="heroRankingContainer" style="display:none;"> • <span id="heroRanking">...</span></span>
+                    </p>
+                    <span style="background: #4caf50; color: white !important; padding: 4px 12px; border-radius: 6px; font-weight: bold; font-size: 1.1rem; display: flex; align-items: center; gap: 5px;">
+                        ★ <span id="heroRating">0.0</span> 
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="vc-container">
+        <div class="vc-main">
+            <div class="vc-card">
+                <h3>About the Institute</h3>
+                <p id="colDesc" style="line-height: 1.6; color: #444;">Loading description...</p>
+            </div>
+            <div class="vc-card">
+                <h3>Courses Offered</h3>
+                <div class="table-responsive">
+                    <table class="course-table">
+                        <thead><tr><th>Course Name</th><th>Level</th><th>Duration</th><th>Fees (Approx)</th><th>Seats</th></tr></thead>
+                        <tbody id="courseTableBody"><tr><td colspan="5" class="text-center">Loading courses...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="vc-card">
+                <h3>Detailed Admissions & Info</h3>
+                <div id="courseAccordion"></div>
+            </div>
+            
+            <div class="vc-card">
+                <h3>Student Reviews</h3>
+                <div id="reviewsList"><p class="text-muted">No reviews yet.</p></div>
+                <hr>
+                
+                <h5 id="formTitle">Write a Review</h5>
+                
+                <input type="hidden" id="editingReviewId" value=""> <textarea id="reviewText" class="form-control mb-2" rows="3" placeholder="Share your experience..."></textarea>
+                
+                <div class="d-flex align-items-center mb-3">
+                    <span class="me-3 fw-bold text-muted">Rating:</span>
+                    <div class="star-widget">
+                        <i class="fas fa-star" data-value="1"></i>
+                        <i class="fas fa-star" data-value="2"></i>
+                        <i class="fas fa-star" data-value="3"></i>
+                        <i class="fas fa-star" data-value="4"></i>
+                        <i class="fas fa-star" data-value="5"></i>
+                    </div>
+                    <input type="hidden" id="reviewRating" value="5">
+                    <span id="ratingText" class="ms-3 text-primary fw-bold">5 Stars</span>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button id="postReviewBtn" onclick="submitReview()" class="btn btn-primary">Post Review</button>
+                    <button id="cancelEditBtn" onclick="cancelEdit()" class="btn btn-secondary" style="display:none;">Cancel</button>
+                </div>
+            </div>
+            </div>
+        <div class="vc-side">
+            <div class="vc-card sidebar-info">
+                <h3>Contact Info</h3>
+                <p><i class="fas fa-map-marker-alt"></i> <span id="colDistrict">...</span></p>
+                <p><i class="fas fa-phone"></i> <span id="colPhone">...</span></p>
+                <p><i class="fas fa-envelope"></i> <span id="colEmail">...</span></p>
+                <a id="colWeb" href="#" target="_blank" class="btn btn-outline-primary w-100 btn-sm mb-2">Visit Website</a>
+                <a id="colSocial" href="#" target="_blank" class="btn btn-outline-secondary w-100 btn-sm">Social Media</a>
+            </div>
+            <div class="vc-card">
+                <h3>Details</h3>
+                <p><strong>Type:</strong> <span id="colType" class="text-primary fw-bold">...</span></p>
+                <p><strong>Mode:</strong> <span id="colMode">...</span></p>
+            </div>
+            <div class="vc-card"><h3>Facilities</h3><div id="colFacilities"></div></div>
+            <div class="vc-card"><h3>Gallery</h3><div class="gallery-grid" id="colGallery"></div></div>
+            <div class="vc-card p-0 overflow-hidden"><div id="colMap" style="height: 250px; background: #eee;"></div></div>
+        </div>
+    </div>
+
+    <div id="lightboxOverlay" onclick="closeLightbox()"><span class="lightbox-close">&times;</span><img id="lightboxImage" src=""></div>
+
+    <div class="modal fade" id="reviewSuccessModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content text-center p-4">
+                <div class="mb-3">
+                    <i class="fas fa-check-circle text-success" style="font-size: 3rem;"></i>
+                </div>
+                <h4 class="fw-bold mb-2">Review Added!</h4>
+                <p class="text-muted">Thank you for sharing your experience. Your rating has been updated.</p>
+                <button type="button" class="btn btn-primary w-100" data-bs-dismiss="modal" style="background-color: #2e1065; border-radius: 50px;">Awesome</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, updateDoc, collection, query, where, getDocs, addDoc, orderBy, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBt5DvViwm5ls_B4CWKYIYhMutJJ9opw_Y",
+            authDomain: "vidyaproject-c4a1d.firebaseapp.com",
+            projectId: "vidyaproject-c4a1d",
+            storageBucket: "vidyaproject-c4a1d.firebasestorage.app",
+            messagingSenderId: "637214484165",
+            appId: "1:637214484165:web:f23e84c08cd6069f6fb2ac",
+            measurementId: "G-647MPHBDGW"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const urlParams = new URLSearchParams(window.location.search);
+        const collegeId = urlParams.get('id');
+        let currentUser = null;
+        let collegeData = null;
+
+        // --- STAR RATING LOGIC ---
+        const stars = document.querySelectorAll('.star-widget i');
+        const ratingInput = document.getElementById('reviewRating');
+        const ratingText = document.getElementById('ratingText');
+
+        highlightStars(5); 
+
+        stars.forEach(star => {
+            star.addEventListener('click', () => {
+                const value = parseInt(star.getAttribute('data-value'));
+                ratingInput.value = value;
+                highlightStars(value);
+                ratingText.innerText = value + (value === 1 ? " Star" : " Stars");
+            });
+        });
+
+        function highlightStars(value) {
+            stars.forEach(s => {
+                const sVal = parseInt(s.getAttribute('data-value'));
+                if (sVal <= value) {
+                    s.classList.add('active'); 
+                } else {
+                    s.classList.remove('active'); 
+                }
+            });
+        }
+
+        onAuthStateChanged(auth, (user) => { 
+            currentUser = user; 
+            if(user) checkFavoriteStatus();
+            if(collegeId) loadReviews(); 
+        });
+
+        if (!collegeId) { 
+            document.body.innerHTML = "<h2 class='text-center mt-5'>College ID Missing.</h2>"; 
+        } else { 
+            loadCollegeDetails(); loadCourses(); loadReviews(); 
+        }
+
+        async function loadCollegeDetails() {
+            try {
+                const docSnap = await getDoc(doc(db, "colleges", collegeId));
+                if (docSnap.exists()) {
+                    collegeData = docSnap.data();
+                    document.title = collegeData.name + " - VIDYA";
+                    document.getElementById('heroName').innerText = collegeData.name;
+                    document.getElementById('heroDistrict').innerText = collegeData.district || collegeData.location;
+                    document.getElementById('heroUniversity').innerText = collegeData.university || 'Affiliated';
+                    
+                    if (collegeData.ranking) {
+                        document.getElementById('heroRanking').innerText = collegeData.ranking;
+                        document.getElementById('heroRankingContainer').style.display = 'inline';
+                    } else {
+                        document.getElementById('heroRankingContainer').style.display = 'none';
+                    }
+
+                    document.getElementById('heroRating').innerText = collegeData.rating || "0.0";
+                    document.getElementById('heroLogo').src = collegeData.logo_path || 'assets/default_logo.png';
+                    
+                    if(collegeData.video_path) {
+                        const v = document.getElementById('heroVideo');
+                        v.src = collegeData.video_path;
+                        v.style.display = 'block';
+                        document.getElementById('heroVideoPlaceholder').style.display = 'none';
+                        v.load(); v.muted = true; v.play().catch(e => console.log("Autoplay blocked"));
+                    }
+
+                    document.getElementById('colDesc').innerText = collegeData.description;
+                    document.getElementById('colDistrict').innerText = collegeData.district;
+                    document.getElementById('colPhone').innerText = collegeData.phone || "N/A";
+                    document.getElementById('colEmail').innerText = collegeData.email || "N/A";
+                    document.getElementById('colWeb').href = collegeData.website || "#";
+                    document.getElementById('colType').innerText = collegeData.institution_type || "N/A";
+                    document.getElementById('colMode').innerText = collegeData.education_mode || "Offline";
+
+                    if(collegeData.social_media) document.getElementById('colSocial').href = collegeData.social_media;
+                    else document.getElementById('colSocial').style.display = 'none';
+
+                    const facDiv = document.getElementById('colFacilities');
+                    if (collegeData.facilities && collegeData.facilities.length > 0) {
+                        collegeData.facilities.forEach(f => facDiv.innerHTML += `<span class="facility-tag">${f}</span>`);
+                    } else { facDiv.innerText = "No info."; }
+
+                    const galDiv = document.getElementById('colGallery');
+                    if (collegeData.images) {
+                        collegeData.images.forEach(img => galDiv.innerHTML += `<img src="${img}" class="gallery-img" onclick="openLightbox('${img}')">`);
+                    }
+                    if (collegeData.map_embed) {
+                        document.getElementById('colMap').innerHTML = collegeData.map_embed.replace(/width="\d+"/, 'width="100%"').replace(/height="\d+"/, 'height="100%"');
+                    }
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadCourses() {
+            const table = document.getElementById('courseTableBody');
+            const accordion = document.getElementById('courseAccordion');
+            table.innerHTML = ""; accordion.innerHTML = "";
+            const q = query(collection(db, "courses"), where("college_id", "==", collegeId));
+            const snap = await getDocs(q);
+            if(snap.empty) {
+                table.innerHTML = "<tr><td colspan='5' class='text-center'>No courses available.</td></tr>";
+                accordion.innerHTML = "<p class='text-muted'>No info.</p>"; return;
+            }
+            snap.forEach(doc => {
+                const c = doc.data();
+                table.innerHTML += `<tr><td class="fw-bold text-primary">${c.name}</td><td>${c.level}</td><td>${c.duration}</td><td>₹${c.fees}</td><td>${c.seats}</td></tr>`;
+                accordion.innerHTML += `<div class="acc-item"><button class="acc-btn" onclick="toggleAcc('${doc.id}')">${c.name} <i class="fas fa-chevron-down"></i></button><div id="panel-${doc.id}" class="acc-content"><p><strong>Eligibility:</strong> ${c.eligibility || 'N/A'}</p><p><strong>Admission Process:</strong> ${c.admission_process || 'N/A'}</p><p><strong>Placement:</strong> ${c.placement_info || 'N/A'}</p><p><strong>Exam:</strong> ${c.entrance_exam || 'None'}</p></div></div>`;
+            });
+        }
+
+        // --- REVIEWS LOGIC ---
+
+        async function loadReviews() {
+            const list = document.getElementById('reviewsList');
+            try {
+                const q = query(collection(db, "reviews"), where("college_id", "==", collegeId));
+                const snap = await getDocs(q);
+                
+                if(!snap.empty) {
+                    list.innerHTML = "";
+                    snap.forEach(docSnap => {
+                        const r = docSnap.data();
+                        const rId = docSnap.id; 
+                        addReviewToUI(r, rId, list, false); 
+                    });
+                } else {
+                    list.innerHTML = "<p class='text-muted'>No reviews yet.</p>";
+                }
+            } catch (error) {
+                console.error("FIREBASE ERROR:", error);
+                list.innerHTML = `<p class='text-muted'>Error loading reviews.</p>`;
+            }
+        }
+
+        function addReviewToUI(data, id, container, isNew = false) {
+            // Display logic: Preference given to saved name, else auth name, else email part
+            const displayName = (data.user_name && data.user_name.trim() !== "") 
+                                ? data.user_name 
+                                : (data.user_email ? data.user_email.split('@')[0] : "Anonymous");
+
+            let actionButtons = "";
+            if (currentUser && currentUser.uid === data.user_id) {
+                actionButtons = `
+                    <div class="ms-auto">
+                        <button class="btn btn-link text-primary p-0 me-2" 
+                            onclick="startEdit('${id}', '${data.text.replace(/'/g, "\\'")}', ${data.rating})" 
+                            title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-link text-danger p-0" 
+                            onclick="deleteReview('${id}')" 
+                            title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>`;
+            }
+
+            const html = `
+                <div id="review-${id}" class="mb-3 border-bottom pb-2 ${isNew ? 'bg-light p-2 rounded' : ''}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-2">
+                            <strong>${displayName}</strong>
+                            <span class="text-warning small">${"★".repeat(data.rating)}</span>
+                        </div>
+                        ${actionButtons}
+                    </div>
+                    <p class="mb-1 text-secondary mt-1">${data.text}</p>
+                </div>`;
+            
+            if(isNew) {
+                if(container.innerHTML.includes("No reviews yet")) container.innerHTML = "";
+                container.innerHTML = html + container.innerHTML;
+            } else {
+                container.innerHTML += html;
+            }
+        }
+
+        // --- EDIT & DELETE FUNCTIONS ---
+
+        window.startEdit = function(id, text, rating) {
+            // No name to populate anymore
+            document.getElementById('formTitle').scrollIntoView({ behavior: 'smooth' });
+            
+            document.getElementById('reviewText').value = text;
+            
+            document.getElementById('reviewRating').value = rating;
+            highlightStars(rating);
+            document.getElementById('ratingText').innerText = rating + " Stars";
+
+            document.getElementById('editingReviewId').value = id;
+            document.getElementById('postReviewBtn').innerText = "Update Review";
+            document.getElementById('postReviewBtn').classList.replace("btn-primary", "btn-success");
+            document.getElementById('formTitle').innerText = "Edit Your Review";
+            document.getElementById('cancelEditBtn').style.display = "block";
+        }
+
+        window.cancelEdit = function() {
+            document.getElementById('editingReviewId').value = "";
+            document.getElementById('reviewText').value = "";
+            document.getElementById('reviewRating').value = "5";
+            highlightStars(5);
+            document.getElementById('ratingText').innerText = "5 Stars";
+            
+            const btn = document.getElementById('postReviewBtn');
+            btn.innerText = "Post Review";
+            btn.classList.replace("btn-success", "btn-primary");
+            document.getElementById('formTitle').innerText = "Write a Review";
+            document.getElementById('cancelEditBtn').style.display = "none";
+        }
+
+        window.deleteReview = async function(reviewId) {
+            if(!confirm("Are you sure you want to delete this review?")) return;
+
+            try {
+                await deleteDoc(doc(db, "reviews", reviewId));
+                
+                const el = document.getElementById(`review-${reviewId}`);
+                if(el) el.remove();
+
+                await calculateAndSaveAverage();
+
+                const list = document.getElementById('reviewsList');
+                if(list.children.length === 0) list.innerHTML = "<p class='text-muted'>No reviews yet.</p>";
+
+            } catch(e) {
+                alert("Error deleting: " + e.message);
+            }
+        }
+
+        window.submitReview = async function() {
+            if(!currentUser) { alert("Please login first."); return; }
+            
+            const text = document.getElementById('reviewText').value;
+            const rating = parseInt(document.getElementById('reviewRating').value);
+            const editId = document.getElementById('editingReviewId').value; 
+            const btn = document.getElementById('postReviewBtn');
+            
+            if(!text) { alert("Please write something!"); return; }
+
+            try {
+                btn.disabled = true;
+                btn.innerText = editId ? "Updating..." : "Posting...";
+
+                // AUTO-DETECT NAME
+                // 1. Try "users" collection (Best Source)
+                // 2. Try Google Auth Profile (Next Best)
+                // 3. Fallback to Email Handle
+                let detectedName = currentUser.displayName || currentUser.email.split('@')[0];
+                
+                try {
+                    const userRef = doc(db, "users", currentUser.uid);
+                    const userSnap = await getDoc(userRef);
+                    if(userSnap.exists() && userSnap.data().name) {
+                        detectedName = userSnap.data().name;
+                    }
+                } catch(err) {
+                    console.log("Could not fetch user profile details, using auth default.");
+                }
+
+                const reviewData = { 
+                    college_id: collegeId, 
+                    user_id: currentUser.uid, 
+                    user_email: currentUser.email, 
+                    user_name: detectedName, // Using the auto-detected name
+                    text: text, 
+                    rating: rating, 
+                    updatedAt: new Date()
+                };
+
+                if (!editId) {
+                    reviewData.createdAt = new Date();
+                    await addDoc(collection(db, "reviews"), reviewData);
+                    loadReviews(); 
+                } else {
+                    const reviewRef = doc(db, "reviews", editId);
+                    // We update the name here too, so if the user fixed their profile, the review updates
+                    await updateDoc(reviewRef, reviewData);
+                    loadReviews(); 
+                    cancelEdit(); 
+                }
+                
+                await calculateAndSaveAverage();
+
+                if(!editId) {
+                    const successModal = new bootstrap.Modal(document.getElementById('reviewSuccessModal'));
+                    successModal.show();
+                    cancelEdit(); 
+                }
+
+            } catch (e) {
+                console.error(e);
+                alert("Error: " + e.message);
+            } finally {
+                btn.disabled = false;
+                if(!editId) btn.innerText = "Post Review";
+            }
+        }
+
+        async function calculateAndSaveAverage() {
+            try {
+                const q = query(collection(db, "reviews"), where("college_id", "==", collegeId));
+                const snap = await getDocs(q);
+                
+                let avg = 0;
+                if (!snap.empty) {
+                    let total = 0;
+                    snap.forEach(d => total += d.data().rating);
+                    avg = total / snap.size;
+                    avg = Math.round(avg * 10) / 10;
+                }
+
+                document.getElementById('heroRating').innerText = avg;
+                
+                const collegeRef = doc(db, "colleges", collegeId);
+                await updateDoc(collegeRef, { rating: avg });
+                
+            } catch (error) {
+                console.error("Error calculating average:", error);
+            }
+        }
+
+        async function checkFavoriteStatus() {
+            const favRef = doc(db, "users", currentUser.uid, "favorites", collegeId);
+            const docSnap = await getDoc(favRef);
+            if (docSnap.exists()) updateFavButton(true);
+        }
+
+        window.toggleFavorite = async function() {
+            if (!currentUser) return;
+            const favRef = doc(db, "users", currentUser.uid, "favorites", collegeId);
+            try {
+                const docSnap = await getDoc(favRef);
+                if (docSnap.exists()) {
+                    await deleteDoc(favRef);
+                    updateFavButton(false);
+                } else {
+                    await setDoc(favRef, {
+                        collegeId: collegeId, 
+                        name: collegeData.name,
+                        location: collegeData.district || collegeData.location || "Kerala",
+                        logo: collegeData.logo_path || collegeData.logo || "assets/default-college.png",
+                        addedAt: new Date()
+                    });
+                    updateFavButton(true);
+                }
+            } catch (error) { console.error("Error toggling favorite:", error); }
+        }
+
+        function updateFavButton(isFavorited) {
+            const btn = document.getElementById('favBtn');
+            btn.className = "btn-fav-custom"; 
+            if (isFavorited) {
+                btn.innerHTML = '<i class="fas fa-heart"></i> Favorited';
+                btn.classList.add('is-active');
+            } else {
+                btn.innerHTML = '<i class="far fa-heart"></i> Favorite';
+                btn.classList.remove('is-active');
+            }
+        }
+
+        window.openLightbox = (src) => { document.getElementById('lightboxImage').src = src; document.getElementById('lightboxOverlay').style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+        window.closeLightbox = () => { document.getElementById('lightboxOverlay').style.display = 'none'; document.body.style.overflow = 'auto'; }
+        window.toggleAcc = (id) => { const el = document.getElementById('panel-' + id); el.style.display = el.style.display === 'block' ? 'none' : 'block'; }
+    </script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <footer style="padding:28px;text-align:center;color:#666">2026 VIDYA Project | Developed by Samson Varghese, Ewin Job, Jeremiah AR</footer>
+</body>
+</html>
