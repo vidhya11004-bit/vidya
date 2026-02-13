@@ -130,11 +130,7 @@
                 
                 <h5 id="formTitle">Write a Review</h5>
                 
-                <input type="hidden" id="editingReviewId" value=""> <div class="mb-2">
-                    <input type="text" id="reviewerName" class="form-control" placeholder="Your Name (Display Name)">
-                </div>
-                
-                <textarea id="reviewText" class="form-control mb-2" rows="3" placeholder="Share your experience..."></textarea>
+                <input type="hidden" id="editingReviewId" value=""> <textarea id="reviewText" class="form-control mb-2" rows="3" placeholder="Share your experience..."></textarea>
                 
                 <div class="d-flex align-items-center mb-3">
                     <span class="me-3 fw-bold text-muted">Rating:</span>
@@ -243,7 +239,6 @@
         onAuthStateChanged(auth, (user) => { 
             currentUser = user; 
             if(user) checkFavoriteStatus();
-            // Reload reviews to show Edit/Delete buttons if user just logged in
             if(collegeId) loadReviews(); 
         });
 
@@ -337,7 +332,7 @@
                     list.innerHTML = "";
                     snap.forEach(docSnap => {
                         const r = docSnap.data();
-                        const rId = docSnap.id; // Get Document ID
+                        const rId = docSnap.id; 
                         addReviewToUI(r, rId, list, false); 
                     });
                 } else {
@@ -350,19 +345,17 @@
         }
 
         function addReviewToUI(data, id, container, isNew = false) {
-            // Priority: Explicit User Name -> Email Handle -> "Anonymous"
+            // Display logic: Preference given to saved name, else auth name, else email part
             const displayName = (data.user_name && data.user_name.trim() !== "") 
                                 ? data.user_name 
                                 : (data.user_email ? data.user_email.split('@')[0] : "Anonymous");
 
-            // Check if current user owns this review
             let actionButtons = "";
             if (currentUser && currentUser.uid === data.user_id) {
-                // We use data-attributes to store info for editing safely
                 actionButtons = `
                     <div class="ms-auto">
                         <button class="btn btn-link text-primary p-0 me-2" 
-                            onclick="startEdit('${id}', '${displayName.replace(/'/g, "\\'")}', '${data.text.replace(/'/g, "\\'")}', ${data.rating})" 
+                            onclick="startEdit('${id}', '${data.text.replace(/'/g, "\\'")}', ${data.rating})" 
                             title="Edit">
                             <i class="fas fa-edit"></i>
                         </button>
@@ -396,20 +389,16 @@
 
         // --- EDIT & DELETE FUNCTIONS ---
 
-        window.startEdit = function(id, name, text, rating) {
-            // 1. Scroll to form
+        window.startEdit = function(id, text, rating) {
+            // No name to populate anymore
             document.getElementById('formTitle').scrollIntoView({ behavior: 'smooth' });
             
-            // 2. Populate form fields
-            document.getElementById('reviewerName').value = name;
             document.getElementById('reviewText').value = text;
             
-            // 3. Set Rating UI
             document.getElementById('reviewRating').value = rating;
             highlightStars(rating);
             document.getElementById('ratingText').innerText = rating + " Stars";
 
-            // 4. Change State to "Editing"
             document.getElementById('editingReviewId').value = id;
             document.getElementById('postReviewBtn').innerText = "Update Review";
             document.getElementById('postReviewBtn').classList.replace("btn-primary", "btn-success");
@@ -419,13 +408,11 @@
 
         window.cancelEdit = function() {
             document.getElementById('editingReviewId').value = "";
-            document.getElementById('reviewerName').value = "";
             document.getElementById('reviewText').value = "";
             document.getElementById('reviewRating').value = "5";
             highlightStars(5);
             document.getElementById('ratingText').innerText = "5 Stars";
             
-            // Reset Buttons
             const btn = document.getElementById('postReviewBtn');
             btn.innerText = "Post Review";
             btn.classList.replace("btn-success", "btn-primary");
@@ -439,14 +426,11 @@
             try {
                 await deleteDoc(doc(db, "reviews", reviewId));
                 
-                // Remove from UI immediately
                 const el = document.getElementById(`review-${reviewId}`);
                 if(el) el.remove();
 
-                // Recalculate Average
                 await calculateAndSaveAverage();
 
-                // If empty, show message
                 const list = document.getElementById('reviewsList');
                 if(list.children.length === 0) list.innerHTML = "<p class='text-muted'>No reviews yet.</p>";
 
@@ -460,8 +444,7 @@
             
             const text = document.getElementById('reviewText').value;
             const rating = parseInt(document.getElementById('reviewRating').value);
-            const nameInput = document.getElementById('reviewerName').value;
-            const editId = document.getElementById('editingReviewId').value; // Check if editing
+            const editId = document.getElementById('editingReviewId').value; 
             const btn = document.getElementById('postReviewBtn');
             
             if(!text) { alert("Please write something!"); return; }
@@ -470,38 +453,50 @@
                 btn.disabled = true;
                 btn.innerText = editId ? "Updating..." : "Posting...";
 
+                // AUTO-DETECT NAME
+                // 1. Try "users" collection (Best Source)
+                // 2. Try Google Auth Profile (Next Best)
+                // 3. Fallback to Email Handle
+                let detectedName = currentUser.displayName || currentUser.email.split('@')[0];
+                
+                try {
+                    const userRef = doc(db, "users", currentUser.uid);
+                    const userSnap = await getDoc(userRef);
+                    if(userSnap.exists() && userSnap.data().name) {
+                        detectedName = userSnap.data().name;
+                    }
+                } catch(err) {
+                    console.log("Could not fetch user profile details, using auth default.");
+                }
+
                 const reviewData = { 
                     college_id: collegeId, 
                     user_id: currentUser.uid, 
                     user_email: currentUser.email, 
-                    user_name: nameInput || currentUser.email.split('@')[0], // Prioritize input name
+                    user_name: detectedName, // Using the auto-detected name
                     text: text, 
                     rating: rating, 
                     updatedAt: new Date()
                 };
 
                 if (!editId) {
-                    // CREATE NEW
                     reviewData.createdAt = new Date();
                     await addDoc(collection(db, "reviews"), reviewData);
-                    const list = document.getElementById('reviewsList');
-                    // We reload to get the ID properly or just refresh
                     loadReviews(); 
                 } else {
-                    // UPDATE EXISTING
                     const reviewRef = doc(db, "reviews", editId);
+                    // We update the name here too, so if the user fixed their profile, the review updates
                     await updateDoc(reviewRef, reviewData);
-                    loadReviews(); // Refresh list to show updates
-                    cancelEdit(); // Reset form
+                    loadReviews(); 
+                    cancelEdit(); 
                 }
                 
-                // Recalculate Average
                 await calculateAndSaveAverage();
 
                 if(!editId) {
                     const successModal = new bootstrap.Modal(document.getElementById('reviewSuccessModal'));
                     successModal.show();
-                    cancelEdit(); // Clears form
+                    cancelEdit(); 
                 }
 
             } catch (e) {
