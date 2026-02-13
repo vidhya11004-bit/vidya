@@ -127,10 +127,11 @@
                 <h3>Student Reviews</h3>
                 <div id="reviewsList"><p class="text-muted">No reviews yet.</p></div>
                 <hr>
-                <h5>Write a Review</h5>
                 
-                <div class="mb-2">
-                    <input type="text" id="reviewerName" class="form-control" placeholder="Your Name (Optional)">
+                <h5 id="formTitle">Write a Review</h5>
+                
+                <input type="hidden" id="editingReviewId" value=""> <div class="mb-2">
+                    <input type="text" id="reviewerName" class="form-control" placeholder="Your Name (Display Name)">
                 </div>
                 
                 <textarea id="reviewText" class="form-control mb-2" rows="3" placeholder="Share your experience..."></textarea>
@@ -148,7 +149,10 @@
                     <span id="ratingText" class="ms-3 text-primary fw-bold">5 Stars</span>
                 </div>
 
-                <button id="postReviewBtn" onclick="submitReview()" class="btn btn-primary">Post Review</button>
+                <div class="d-flex gap-2">
+                    <button id="postReviewBtn" onclick="submitReview()" class="btn btn-primary">Post Review</button>
+                    <button id="cancelEditBtn" onclick="cancelEdit()" class="btn btn-secondary" style="display:none;">Cancel</button>
+                </div>
             </div>
             </div>
         <div class="vc-side">
@@ -238,7 +242,9 @@
 
         onAuthStateChanged(auth, (user) => { 
             currentUser = user; 
-            if(user) checkFavoriteStatus(); 
+            if(user) checkFavoriteStatus();
+            // Reload reviews to show Edit/Delete buttons if user just logged in
+            if(collegeId) loadReviews(); 
         });
 
         if (!collegeId) { 
@@ -319,119 +325,214 @@
             });
         }
 
+        // --- REVIEWS LOGIC ---
+
         async function loadReviews() {
             const list = document.getElementById('reviewsList');
             try {
-                // FIXED: Removed ".orderBy" to prevent the Red Text Index Error
                 const q = query(collection(db, "reviews"), where("college_id", "==", collegeId));
                 const snap = await getDocs(q);
                 
                 if(!snap.empty) {
                     list.innerHTML = "";
-                    snap.forEach(doc => {
-                        const r = doc.data();
-                        addReviewToUI(r, list, false); 
+                    snap.forEach(docSnap => {
+                        const r = docSnap.data();
+                        const rId = docSnap.id; // Get Document ID
+                        addReviewToUI(r, rId, list, false); 
                     });
+                } else {
+                    list.innerHTML = "<p class='text-muted'>No reviews yet.</p>";
                 }
             } catch (error) {
                 console.error("FIREBASE ERROR:", error);
-                // Shows a cleaner error in console, keeps UI clean
-                list.innerHTML = `<p class='text-muted'>Error loading reviews (Check Console).</p>`;
+                list.innerHTML = `<p class='text-muted'>Error loading reviews.</p>`;
             }
         }
 
-        function addReviewToUI(data, container, isNew = false) {
-            const displayName = data.user_name && data.user_name.trim() !== "" ? data.user_name : data.user_email.split('@')[0];
-            
+        function addReviewToUI(data, id, container, isNew = false) {
+            // Priority: Explicit User Name -> Email Handle -> "Anonymous"
+            const displayName = (data.user_name && data.user_name.trim() !== "") 
+                                ? data.user_name 
+                                : (data.user_email ? data.user_email.split('@')[0] : "Anonymous");
+
+            // Check if current user owns this review
+            let actionButtons = "";
+            if (currentUser && currentUser.uid === data.user_id) {
+                // We use data-attributes to store info for editing safely
+                actionButtons = `
+                    <div class="ms-auto">
+                        <button class="btn btn-link text-primary p-0 me-2" 
+                            onclick="startEdit('${id}', '${displayName.replace(/'/g, "\\'")}', '${data.text.replace(/'/g, "\\'")}', ${data.rating})" 
+                            title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-link text-danger p-0" 
+                            onclick="deleteReview('${id}')" 
+                            title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>`;
+            }
+
             const html = `
-                <div class="mb-3 border-bottom pb-2 ${isNew ? 'bg-light p-2 rounded' : ''}">
-                    <div class="d-flex justify-content-between">
-                        <strong>${displayName}</strong>
-                        <span class="text-warning">${"★".repeat(data.rating)}</span>
+                <div id="review-${id}" class="mb-3 border-bottom pb-2 ${isNew ? 'bg-light p-2 rounded' : ''}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-2">
+                            <strong>${displayName}</strong>
+                            <span class="text-warning small">${"★".repeat(data.rating)}</span>
+                        </div>
+                        ${actionButtons}
                     </div>
-                    <p class="mb-1 text-secondary">${data.text}</p>
+                    <p class="mb-1 text-secondary mt-1">${data.text}</p>
                 </div>`;
             
-            if(isNew) container.innerHTML = html + container.innerHTML;
-            else container.innerHTML += html;
+            if(isNew) {
+                if(container.innerHTML.includes("No reviews yet")) container.innerHTML = "";
+                container.innerHTML = html + container.innerHTML;
+            } else {
+                container.innerHTML += html;
+            }
         }
 
-        // --- NEW: FUNCTION TO CALCULATE AVERAGE (Robust Version) ---
-        async function calculateAndSaveAverage() {
+        // --- EDIT & DELETE FUNCTIONS ---
+
+        window.startEdit = function(id, name, text, rating) {
+            // 1. Scroll to form
+            document.getElementById('formTitle').scrollIntoView({ behavior: 'smooth' });
+            
+            // 2. Populate form fields
+            document.getElementById('reviewerName').value = name;
+            document.getElementById('reviewText').value = text;
+            
+            // 3. Set Rating UI
+            document.getElementById('reviewRating').value = rating;
+            highlightStars(rating);
+            document.getElementById('ratingText').innerText = rating + " Stars";
+
+            // 4. Change State to "Editing"
+            document.getElementById('editingReviewId').value = id;
+            document.getElementById('postReviewBtn').innerText = "Update Review";
+            document.getElementById('postReviewBtn').classList.replace("btn-primary", "btn-success");
+            document.getElementById('formTitle').innerText = "Edit Your Review";
+            document.getElementById('cancelEditBtn').style.display = "block";
+        }
+
+        window.cancelEdit = function() {
+            document.getElementById('editingReviewId').value = "";
+            document.getElementById('reviewerName').value = "";
+            document.getElementById('reviewText').value = "";
+            document.getElementById('reviewRating').value = "5";
+            highlightStars(5);
+            document.getElementById('ratingText').innerText = "5 Stars";
+            
+            // Reset Buttons
+            const btn = document.getElementById('postReviewBtn');
+            btn.innerText = "Post Review";
+            btn.classList.replace("btn-success", "btn-primary");
+            document.getElementById('formTitle').innerText = "Write a Review";
+            document.getElementById('cancelEditBtn').style.display = "none";
+        }
+
+        window.deleteReview = async function(reviewId) {
+            if(!confirm("Are you sure you want to delete this review?")) return;
+
             try {
-                // 1. Get ALL reviews for this college
-                const q = query(collection(db, "reviews"), where("college_id", "==", collegeId));
-                const snap = await getDocs(q);
+                await deleteDoc(doc(db, "reviews", reviewId));
                 
-                if (snap.empty) return;
+                // Remove from UI immediately
+                const el = document.getElementById(`review-${reviewId}`);
+                if(el) el.remove();
 
-                let total = 0;
-                snap.forEach(d => total += d.data().rating);
-                
-                // 2. Calculate Average
-                let avg = total / snap.size;
-                avg = Math.round(avg * 10) / 10; // Round to 1 decimal place
+                // Recalculate Average
+                await calculateAndSaveAverage();
 
-                // 3. FORCE UPDATE UI INSTANTLY (Do this BEFORE saving)
-                document.getElementById('heroRating').innerText = avg;
-                console.log("UI Updated with Average:", avg);
+                // If empty, show message
+                const list = document.getElementById('reviewsList');
+                if(list.children.length === 0) list.innerHTML = "<p class='text-muted'>No reviews yet.</p>";
 
-                // 4. Try to Save to Database
-                const collegeRef = doc(db, "colleges", collegeId);
-                await updateDoc(collegeRef, { rating: avg });
-                console.log("Database Save Successful");
-                
-            } catch (error) {
-                // If permission denied, user still sees the updated rating on screen
-                console.warn("Could not save rating to DB (likely permissions). UI updated anyway.");
-                console.error(error);
+            } catch(e) {
+                alert("Error deleting: " + e.message);
             }
         }
 
         window.submitReview = async function() {
             if(!currentUser) { alert("Please login first."); return; }
+            
             const text = document.getElementById('reviewText').value;
-            const rating = document.getElementById('reviewRating').value;
+            const rating = parseInt(document.getElementById('reviewRating').value);
             const nameInput = document.getElementById('reviewerName').value;
+            const editId = document.getElementById('editingReviewId').value; // Check if editing
             const btn = document.getElementById('postReviewBtn');
             
             if(!text) { alert("Please write something!"); return; }
 
             try {
                 btn.disabled = true;
-                btn.innerText = "Posting...";
+                btn.innerText = editId ? "Updating..." : "Posting...";
 
                 const reviewData = { 
                     college_id: collegeId, 
                     user_id: currentUser.uid, 
                     user_email: currentUser.email, 
-                    user_name: nameInput || currentUser.email.split('@')[0],
+                    user_name: nameInput || currentUser.email.split('@')[0], // Prioritize input name
                     text: text, 
-                    rating: parseInt(rating), 
-                    createdAt: new Date() 
+                    rating: rating, 
+                    updatedAt: new Date()
                 };
 
-                await addDoc(collection(db, "reviews"), reviewData);
+                if (!editId) {
+                    // CREATE NEW
+                    reviewData.createdAt = new Date();
+                    await addDoc(collection(db, "reviews"), reviewData);
+                    const list = document.getElementById('reviewsList');
+                    // We reload to get the ID properly or just refresh
+                    loadReviews(); 
+                } else {
+                    // UPDATE EXISTING
+                    const reviewRef = doc(db, "reviews", editId);
+                    await updateDoc(reviewRef, reviewData);
+                    loadReviews(); // Refresh list to show updates
+                    cancelEdit(); // Reset form
+                }
                 
-                // Update UI and DB
+                // Recalculate Average
                 await calculateAndSaveAverage();
 
-                const successModal = new bootstrap.Modal(document.getElementById('reviewSuccessModal'));
-                successModal.show();
+                if(!editId) {
+                    const successModal = new bootstrap.Modal(document.getElementById('reviewSuccessModal'));
+                    successModal.show();
+                    cancelEdit(); // Clears form
+                }
 
-                const list = document.getElementById('reviewsList');
-                if(list.innerText.includes("No reviews yet")) list.innerHTML = "";
-                addReviewToUI(reviewData, list, true);
-
-                document.getElementById('reviewText').value = "";
-                document.getElementById('reviewerName').value = "";
-                
             } catch (e) {
                 console.error(e);
                 alert("Error: " + e.message);
             } finally {
                 btn.disabled = false;
-                btn.innerText = "Post Review";
+                if(!editId) btn.innerText = "Post Review";
+            }
+        }
+
+        async function calculateAndSaveAverage() {
+            try {
+                const q = query(collection(db, "reviews"), where("college_id", "==", collegeId));
+                const snap = await getDocs(q);
+                
+                let avg = 0;
+                if (!snap.empty) {
+                    let total = 0;
+                    snap.forEach(d => total += d.data().rating);
+                    avg = total / snap.size;
+                    avg = Math.round(avg * 10) / 10;
+                }
+
+                document.getElementById('heroRating').innerText = avg;
+                
+                const collegeRef = doc(db, "colleges", collegeId);
+                await updateDoc(collegeRef, { rating: avg });
+                
+            } catch (error) {
+                console.error("Error calculating average:", error);
             }
         }
 
