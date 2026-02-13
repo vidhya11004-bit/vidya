@@ -421,8 +421,7 @@
         }
 
         window.deleteReview = async function(reviewId) {
-            if(!confirm("Are you sure you want to delete this review?")) return;
-
+            // CONFIRMATION POPUP REMOVED - DELETES IMMEDIATELY
             try {
                 await deleteDoc(doc(db, "reviews", reviewId));
                 
@@ -454,11 +453,7 @@
                 btn.innerText = editId ? "Updating..." : "Posting...";
 
                 // AUTO-DETECT NAME
-                // 1. Try "users" collection (Best Source)
-                // 2. Try Google Auth Profile (Next Best)
-                // 3. Fallback to Email Handle
                 let detectedName = currentUser.displayName || currentUser.email.split('@')[0];
-                
                 try {
                     const userRef = doc(db, "users", currentUser.uid);
                     const userSnap = await getDoc(userRef);
@@ -473,7 +468,7 @@
                     college_id: collegeId, 
                     user_id: currentUser.uid, 
                     user_email: currentUser.email, 
-                    user_name: detectedName, // Using the auto-detected name
+                    user_name: detectedName, 
                     text: text, 
                     rating: rating, 
                     updatedAt: new Date()
@@ -485,7 +480,6 @@
                     loadReviews(); 
                 } else {
                     const reviewRef = doc(db, "reviews", editId);
-                    // We update the name here too, so if the user fixed their profile, the review updates
                     await updateDoc(reviewRef, reviewData);
                     loadReviews(); 
                     cancelEdit(); 
